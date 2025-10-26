@@ -81,4 +81,4 @@ export default function ResultsPage() {
   }
 
   fetchContent()
-}, [searchParams])
+}, [searchParams])}
