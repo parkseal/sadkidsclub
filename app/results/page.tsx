@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
@@ -15,70 +15,97 @@ interface ContentItem {
   matchCount?: number
 }
 
-export default function ResultsPage() {
+function ResultsContent() {
   const searchParams = useSearchParams()
   const [content, setContent] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-  async function fetchContent() {
-    const keywordIds = searchParams.get('keywords')?.split(',') || []
-    
-    if (keywordIds.length === 0) {
-      setLoading(false)
-      return
-    }
-
-    // Get all content that matches ANY of the selected keywords
-    const { data, error } = await supabase
-      .from('content_items')
-      .select(`
-        *,
-        content_keywords!inner(keyword_id)
-      `)
-      .in('content_keywords.keyword_id', keywordIds)
-
-    if (data) {
-      // Count how many selected keywords each item matches
-      const contentWithScores = data.reduce((acc: any[], item) => {
-        // Check if we've already processed this item
-        const existing = acc.find(i => i.id === item.id)
-        
-        if (existing) {
-          return acc
-        }
-
-        // Get all keywords for this item
-        const itemKeywords = data
-          .filter(d => d.id === item.id)
-          .map((d: any) => d.content_keywords.keyword_id)
-        
-        // Count matches
-        const matchCount = keywordIds.filter(kid => itemKeywords.includes(kid)).length
-        
-        const newItem = {
-          id: item.id,
-          title: item.title,
-          description: item.description,
-          content_type: item.content_type,
-          content_data: item.content_data,
-          file_url: item.file_url,
-          matchCount: matchCount
-        }
-        
-        acc.push(newItem)
-        
-        return acc
-      }, [])
-
-      // Sort by match count (most matches first)
-      contentWithScores.sort((a, b) => b.matchCount - a.matchCount)
+    async function fetchContent() {
+      const keywordIds = searchParams.get('keywords')?.split(',') || []
       
-      setContent(contentWithScores)
-    }
-    
-    setLoading(false)
-  }
+      if (keywordIds.length === 0) {
+        setLoading(false)
+        return
+      }
 
-  fetchContent()
-}, [searchParams])}
+      // Get all content that matches ANY of the selected keywords
+      const { data, error } = await supabase
+        .from('content_items')
+        .select(`
+          *,
+          content_keywords!inner(keyword_id)
+        `)
+        .in('content_keywords.keyword_id', keywordIds)
+
+      if (data) {
+        // Count how many selected keywords each item matches
+        const contentWithScores = data.reduce((acc: any[], item) => {
+          // Check if we've already processed this item
+          const existing = acc.find(i => i.id === item.id)
+          
+          if (existing) {
+            return acc
+          }
+
+          // Get all keywords for this item
+          const itemKeywords = data
+            .filter(d => d.id === item.id)
+            .map((d: any) => d.content_keywords.keyword_id)
+          
+          // Count matches
+          const matchCount = keywordIds.filter(kid => itemKeywords.includes(kid)).length
+          
+          const newItem = {
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            content_type: item.content_type,
+            content_data: item.content_data,
+            file_url: item.file_url,
+            matchCount: matchCount
+          }
+          
+          acc.push(newItem)
+          
+          return acc
+        }, [])
+
+        // Sort by match count (most matches first)
+        contentWithScores.sort((a, b) => b.matchCount - a.matchCount)
+        
+        setContent(contentWithScores)
+      }
+      
+      setLoading(false)
+    }
+
+    fetchContent()
+  }, [searchParams])
+
+  // Your JSX return goes here
+  return (
+    <div>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <div>
+          {content.map(item => (
+            <div key={item.id}>
+              <h2>{item.title}</h2>
+              <p>{item.description}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function ResultsPage() {
+  return (
+    <Suspense fallback={<div>Loading results...</div>}>
+      <ResultsContent />
+    </Suspense>
+  )
+}
