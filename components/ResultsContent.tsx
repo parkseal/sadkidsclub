@@ -11,6 +11,7 @@ interface ContentItem {
   content_type: string
   content_data: any
   file_url: string | null
+  matchCount?: number 
 }
 
 export default function ResultsContent() {
@@ -19,53 +20,61 @@ export default function ResultsContent() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchContent() {
-      const keywordIds = searchParams.get('keywords')?.split(',') || []
-      
-      if (keywordIds.length === 0) {
-        setLoading(false)
-        return
-      }
-
-      // Query content that matches ANY selected keywords first
-      const { data, error } = await supabase
-        .from('content_items')
-        .select(`
-          *,
-          content_keywords!inner(keyword_id)
-        `)
-        .in('content_keywords.keyword_id', keywordIds)
-
-      if (data) {
-        // Group by content_id and filter for items matching ALL keywords
-        const contentMap = new Map<string, any>()
-        
-        data.forEach(item => {
-          if (!contentMap.has(item.id)) {
-            contentMap.set(item.id, {
-              ...item,
-              matched_keywords: new Set([item.content_keywords.keyword_id])
-            })
-          } else {
-            contentMap.get(item.id).matched_keywords.add(item.content_keywords.keyword_id)
-          }
-        })
-
-        // Filter to items that match ALL selected keywords
-        const filtered = Array.from(contentMap.values())
-          .filter(item => {
-            return keywordIds.every(kid => item.matched_keywords.has(kid))
-          })
-          .map(({ matched_keywords, ...rest }) => rest)
-        
-        setContent(filtered)
-      }
-      
+  async function fetchContent() {
+    const keywordIds = searchParams.get('keywords')?.split(',') || []
+    
+    if (keywordIds.length === 0) {
       setLoading(false)
+      return
     }
 
-    fetchContent()
-  }, [searchParams])
+    // Get all content that matches ANY of the selected keywords
+    const { data, error } = await supabase
+      .from('content_items')
+      .select(`
+        *,
+        content_keywords!inner(keyword_id)
+      `)
+      .in('content_keywords.keyword_id', keywordIds)
+
+    if (data) {
+      // Count how many selected keywords each item matches
+      const contentWithScores = data.reduce((acc: any[], item) => {
+        // Check if we've already processed this item (due to multiple keyword matches)
+        const existing = acc.find(i => i.id === item.id)
+        
+        if (existing) {
+          return acc
+        }
+
+        // Get all keywords for this item
+        const itemKeywords = data
+          .filter(d => d.id === item.id)
+          .map((d: any) => d.content_keywords.keyword_id)
+        
+        // Count matches
+        const matchCount = keywordIds.filter(kid => itemKeywords.includes(kid)).length
+        
+        acc.push({
+          ...item,
+          matchCount,
+          content_keywords: undefined // Clean up
+        })
+        
+        return acc
+      }, [])
+
+      // Sort by match count (most matches first)
+      contentWithScores.sort((a, b) => b.matchCount - a.matchCount)
+      
+      setContent(contentWithScores)
+    }
+    
+    setLoading(false)
+  }
+
+  fetchContent()
+}, [searchParams])
 
   if (loading) {
     return <div className="text-center">Loading...</div>
