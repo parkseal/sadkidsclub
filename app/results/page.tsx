@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
@@ -93,6 +93,14 @@ function ContentRenderer({ item }: { item: ContentItem }) {
 }
 
 export default function ResultsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <ResultsContent />
+    </Suspense>
+  )
+}
+
+function ResultsContent() {
   const searchParams = useSearchParams()
   const [content, setContent] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(true)
