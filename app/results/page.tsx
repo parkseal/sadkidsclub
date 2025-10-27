@@ -13,6 +13,8 @@ interface ContentItem {
   content_data: any
   file_url: string | null
   matchCount?: number
+  created_at: string
+  keywords?: Array<{ id: string; name: string }>
 }
 
 function ContentRenderer({ item }: { item: ContentItem }) {
@@ -56,7 +58,7 @@ function ContentRenderer({ item }: { item: ContentItem }) {
           rel="noopener noreferrer"
           className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
-          {item.content_data.linkText || 'Visit Link'} →
+          {item.title} →
         </a>
       )
     
@@ -92,6 +94,59 @@ function ContentRenderer({ item }: { item: ContentItem }) {
   }
 }
 
+function ContentCard({ item }: { item: ContentItem }) {
+  const [expanded, setExpanded] = useState(false)
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    })
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow break-inside-avoid relative">
+      <h2 className="text-xl font-semibold mb-4">{item.content_type === 'link' ? '' : item.title}</h2>
+      <ContentRenderer item={item} />
+      
+      {expanded && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {item.keywords?.map((keyword) => (
+              <span 
+                key={keyword.id}
+                className="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded-full"
+              >
+                {keyword.name}
+              </span>
+            ))}
+          </div>
+          <p className="text-sm text-gray-500">
+            Posted: {formatDate(item.created_at)}
+          </p>
+        </div>
+      )}
+      
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="absolute bottom-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+        aria-label={expanded ? 'Collapse' : 'Expand'}
+      >
+        <svg 
+          className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
 export default function ResultsPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
@@ -118,12 +173,14 @@ function ResultsContent() {
         .from('content_items')
         .select(`
           *,
-          content_keywords!inner(keyword_id)
+          content_keywords!inner(
+            keyword_id,
+            keywords(id, name)
+          )
         `)
         .in('content_keywords.keyword_id', keywordIds)
 
       if (data) {
-        // Count how many selected keywords each item matches
         const contentWithScores = data.reduce((acc: any[], item) => {
           const existing = acc.find(i => i.id === item.id)
           
@@ -133,13 +190,18 @@ function ResultsContent() {
 
           const itemKeywords = data
             .filter(d => d.id === item.id)
-            .map((d: any) => d.content_keywords.keyword_id)
+            .map((d: any) => ({
+              id: d.content_keywords.keywords.id,
+              name: d.content_keywords.keywords.name
+            }))
           
-          const matchCount = keywordIds.filter(kid => itemKeywords.includes(kid)).length
+          const itemKeywordIds = itemKeywords.map(k => k.id)
+          const matchCount = keywordIds.filter(kid => itemKeywordIds.includes(kid)).length
           
           acc.push({
             ...item,
             matchCount,
+            keywords: itemKeywords,
             content_keywords: undefined
           })
           
@@ -177,10 +239,7 @@ function ResultsContent() {
         ) : (
           <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
             {content.map((item) => (
-              <div key={item.id} className="bg-white p-6 rounded-lg shadow break-inside-avoid">
-                <h2 className="text-xl font-semibold mb-4">{item.title}</h2>
-                <ContentRenderer item={item} />
-              </div>
+              <ContentCard key={item.id} item={item} />
             ))}
           </div>
         )}
