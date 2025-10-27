@@ -94,59 +94,6 @@ function ContentRenderer({ item }: { item: ContentItem }) {
   }
 }
 
-function ContentCard({ item }: { item: ContentItem }) {
-  const [expanded, setExpanded] = useState(false)
-  
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    })
-  }
-
-  return (
-    <div className="bg-white p-6 rounded-lg shadow break-inside-avoid relative">
-      <h2 className="text-xl font-semibold mb-4">{item.content_type === 'link' ? '' : item.title}</h2>
-      <ContentRenderer item={item} />
-      
-      {expanded && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <div className="flex flex-wrap gap-2 mb-2">
-            {item.keywords?.map((keyword) => (
-              <span 
-                key={keyword.id}
-                className="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded-full"
-              >
-                {keyword.name}
-              </span>
-            ))}
-          </div>
-          <p className="text-sm text-gray-500">
-            Posted: {formatDate(item.created_at)}
-          </p>
-        </div>
-      )}
-      
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="absolute bottom-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-        aria-label={expanded ? 'Collapse' : 'Expand'}
-      >
-        <svg 
-          className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-    </div>
-  )
-}
-
 export default function ResultsPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
@@ -180,58 +127,75 @@ function ResultsContent() {
         return
       }
 
+      // Use the simpler query approach
       const { data, error } = await supabase
-        .from('content_items')
+        .from('content_keywords')
         .select(`
-          *,
-          content_keywords!inner(
-            keyword_id,
-            keywords(id, name)
-          )
+          keyword_id,
+          content_items(*),
+          keywords(*)
         `)
-        .in('content_keywords.keyword_id', keywordIds)
+        .in('keyword_id', keywordIds)
 
-      if (data) {
-        const contentWithScores = data.reduce((acc: any[], item) => {
-          const existing = acc.find(i => i.id === item.id)
-          
-          if (existing) {
-            // Add this keyword to the existing item
-            if (item.content_keywords?.keywords) {
-              existing.keywords.push(item.content_keywords.keywords)
-            }
-            return acc
-          }
+      if (error) {
+        console.error('Supabase error:', error)
+        setLoading(false)
+        return
+      }
 
-          // Get all keywords for this item from the duplicated rows
-          const itemKeywords = data
-            .filter(d => d.id === item.id)
-            .map((d: any) => ({
-              id: d.content_keywords.keywords.id,
-              name: d.content_keywords.keywords.name
-            }))
-          
-          const keywordIds_list = itemKeywords.map(k => k.id)
-          const matchCount = keywordIds.filter(kid => keywordIds_list.includes(kid)).length
-          
-          acc.push({
-            id: item.id,
-            title: item.title,
-            description: item.description,
-            content_type: item.content_type,
-            content_data: item.content_data,
-            file_url: item.file_url,
-            created_at: item.created_at,
-            matchCount,
-            keywords: itemKeywords
-          })
-          
-          return acc
-        }, [])
+      console.log('Raw data:', data)
 
-        contentWithScores.sort((a, b) => b.matchCount - a.matchCount)
+      if (data && data.length > 0) {
+        // Group by content item
+        const contentMap = new Map()
         
-        setContent(contentWithScores)
+        data.forEach((row: any) => {
+          const content = row.content_items
+          if (!content) return // Skip if content_items is null
+          
+          const contentId = content.id
+          
+          if (!contentMap.has(contentId)) {
+            contentMap.set(contentId, {
+              id: content.id,
+              title: content.title,
+              description: content.description,
+              content_type: content.content_type,
+              content_data: content.content_data,
+              file_url: content.file_url,
+              created_at: content.created_at,
+              keywords: [],
+              matchCount: 0
+            })
+          }
+          
+          // Add keyword if it exists and isn't already added
+          const item = contentMap.get(contentId)
+          if (row.keywords && !item.keywords.find((k: any) => k.id === row.keywords.id)) {
+            item.keywords.push({
+              id: row.keywords.id,
+              name: row.keywords.name
+            })
+          }
+        })
+        
+        // Convert map to array
+        const contentArray = Array.from(contentMap.values())
+        
+        // Calculate match counts
+        contentArray.forEach(item => {
+          item.matchCount = item.keywords.filter((k: any) => 
+            keywordIds.includes(k.id)
+          ).length
+        })
+        
+        // Sort by match count
+        contentArray.sort((a, b) => b.matchCount - a.matchCount)
+        
+        console.log('Processed content:', contentArray)
+        setContent(contentArray)
+      } else {
+        setContent([])
       }
       
       setLoading(false)
