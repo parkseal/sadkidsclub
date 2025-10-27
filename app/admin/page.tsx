@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 interface Keyword {
   id: string
   name: string
+  contentCount?: number
 }
 
 export default function AdminPage() {
@@ -34,8 +35,26 @@ export default function AdminPage() {
   }, [])
 
   async function fetchKeywords() {
-    const { data } = await supabase.from('keywords').select('*').order('name')
-    if (data) setKeywords(data)
+    const { data: keywordsData } = await supabase.from('keywords').select('*').order('name')
+    
+    if (keywordsData) {
+      // Fetch content counts for each keyword
+      const { data: countsData } = await supabase
+        .from('content_keywords')
+        .select('keyword_id')
+      
+      const countMap = new Map()
+      countsData?.forEach((row: any) => {
+        countMap.set(row.keyword_id, (countMap.get(row.keyword_id) || 0) + 1)
+      })
+      
+      const keywordsWithCounts = keywordsData.map(k => ({
+        ...k,
+        contentCount: countMap.get(k.id) || 0
+      }))
+      
+      setKeywords(keywordsWithCounts)
+    }
   }
 
   async function addKeyword() {
@@ -113,7 +132,6 @@ export default function AdminPage() {
           alert('Video embed URL required')
           return
         }
-        // Convert regular YouTube URLs to embed format
         let embedUrl = videoEmbedUrl
         if (videoEmbedUrl.includes('youtube.com/watch')) {
           const videoId = new URL(videoEmbedUrl).searchParams.get('v')
@@ -129,7 +147,6 @@ export default function AdminPage() {
         break
     }
 
-    // Insert content
     const { data: newContent, error: contentError } = await supabase
       .from('content_items')
       .insert({
@@ -146,7 +163,6 @@ export default function AdminPage() {
       return
     }
 
-    // Link to keywords
     const keywordLinks = Array.from(selectedKeywords).map(kid => ({
       content_id: newContent.id,
       keyword_id: kid
@@ -161,8 +177,8 @@ export default function AdminPage() {
       return
     }
 
-    // Reset form
     resetForm()
+    fetchKeywords()
     alert('Content added successfully!')
   }
 
@@ -190,51 +206,43 @@ export default function AdminPage() {
     setSelectedKeywords(newSet)
   }
 
+  const contentTypes = [
+    { value: 'text', label: 'Text' },
+    { value: 'quote', label: 'Quote' },
+    { value: 'link', label: 'Link' },
+    { value: 'image', label: 'Image' },
+    { value: 'video', label: 'Video' }
+  ]
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto space-y-12">
         
-        {/* Keywords Section */}
+        {/* Add Content Section - Now First */}
         <section className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-4">Manage Keywords</h2>
-          
-          <div className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={newKeyword}
-              onChange={(e) => setNewKeyword(e.target.value)}
-              placeholder="New keyword..."
-              className="flex-1 px-4 py-2 border rounded"
-              onKeyPress={(e) => e.key === 'Enter' && addKeyword()}
-            />
-            <button
-              onClick={addKeyword}
-              className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Add
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            {keywords.map(k => (
-              <div key={k.id} className="flex justify-between items-center p-2 border rounded">
-                <span>{k.name}</span>
-                <button
-                  onClick={() => deleteKeyword(k.id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Add Content Section */}
-        <section className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-4">Add Content</h2>
+          <h2 className="text-2xl font-bold mb-6">Add Content</h2>
           
           <div className="space-y-4">
+            {/* Content Type Buttons - Now First */}
+            <div>
+              <p className="font-semibold mb-3">Content Type:</p>
+              <div className="flex gap-2 flex-wrap">
+                {contentTypes.map(type => (
+                  <button
+                    key={type.value}
+                    onClick={() => setContentType(type.value as any)}
+                    className={`px-4 py-2 rounded-lg border-2 font-medium transition-colors ${
+                      contentType === type.value
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <input
               type="text"
               value={contentTitle}
@@ -243,27 +251,20 @@ export default function AdminPage() {
               className="w-full px-4 py-2 border rounded"
             />
 
-            <select
-              value={contentType}
-              onChange={(e) => setContentType(e.target.value as any)}
-              className="w-full px-4 py-2 border rounded"
-            >
-              <option value="text">Text</option>
-              <option value="quote">Quote</option>
-              <option value="link">Link</option>
-              <option value="image">Image</option>
-              <option value="video">Video</option>
-            </select>
-
             {/* Text fields */}
             {contentType === 'text' && (
-              <textarea
-                value={contentText}
-                onChange={(e) => setContentText(e.target.value)}
-                placeholder="Content text..."
-                rows={6}
-                className="w-full px-4 py-2 border rounded"
-              />
+              <>
+                <textarea
+                  value={contentText}
+                  onChange={(e) => setContentText(e.target.value)}
+                  placeholder="Content text (HTML supported)..."
+                  rows={6}
+                  className="w-full px-4 py-2 border rounded"
+                />
+                <p className="text-sm text-gray-600">
+                  Supports HTML formatting like &lt;strong&gt;, &lt;em&gt;, &lt;a href=""&gt;, &lt;br&gt;, etc.
+                </p>
+              </>
             )}
 
             {/* Quote fields */}
@@ -318,11 +319,11 @@ export default function AdminPage() {
                   type="text"
                   value={imageCaption}
                   onChange={(e) => setImageCaption(e.target.value)}
-                  placeholder="Caption (optional)"
+                  placeholder="Caption (optional, HTML supported)"
                   className="w-full px-4 py-2 border rounded"
                 />
                 <p className="text-sm text-gray-600">
-                  Tip: Use free images from unsplash.com or upload to Supabase Storage
+                  Tip: Use free images from unsplash.com or upload to Supabase Storage. Caption supports HTML like &lt;a href=""&gt;link&lt;/a&gt;
                 </p>
               </>
             )}
@@ -341,11 +342,11 @@ export default function AdminPage() {
                   type="text"
                   value={videoCaption}
                   onChange={(e) => setVideoCaption(e.target.value)}
-                  placeholder="Caption (optional)"
+                  placeholder="Caption (optional, HTML supported)"
                   className="w-full px-4 py-2 border rounded"
                 />
                 <p className="text-sm text-gray-600">
-                  Accepts: youtube.com/watch?v=..., youtu.be/..., or direct embed URLs
+                  Accepts: youtube.com/watch?v=..., youtu.be/..., or direct embed URLs. Caption supports HTML.
                 </p>
               </>
             )}
@@ -353,7 +354,7 @@ export default function AdminPage() {
             <div>
               <p className="font-semibold mb-2">Select Keywords (at least 1):</p>
               <div className="grid grid-cols-3 gap-2">
-                {keywords.map(k => (
+                {keywords.map((k: Keyword) => (
                   <button
                     key={k.id}
                     onClick={() => toggleKeyword(k.id)}
@@ -375,6 +376,47 @@ export default function AdminPage() {
             >
               Add Content
             </button>
+          </div>
+        </section>
+
+        {/* Keywords Section - Now Second */}
+        <section className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-bold mb-4">Manage Keywords</h2>
+          
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={newKeyword}
+              onChange={(e) => setNewKeyword(e.target.value)}
+              placeholder="New keyword..."
+              className="flex-1 px-4 py-2 border rounded"
+              onKeyPress={(e) => e.key === 'Enter' && addKeyword()}
+            />
+            <button
+              onClick={addKeyword}
+              className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Add
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {keywords.map((k: Keyword) => (
+              <div key={k.id} className="flex justify-between items-center p-2 border rounded">
+                <div className="flex items-center gap-3">
+                  <span>{k.name}</span>
+                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                    {k.contentCount || 0} content
+                  </span>
+                </div>
+                <button
+                  onClick={() => deleteKeyword(k.id)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
           </div>
         </section>
       </div>

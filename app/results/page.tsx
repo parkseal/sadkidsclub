@@ -21,9 +21,10 @@ function ContentRenderer({ item }: { item: ContentItem }) {
   switch (item.content_type) {
     case 'text':
       return (
-        <div className="prose max-w-none">
-          <p className="whitespace-pre-wrap">{item.content_data.text}</p>
-        </div>
+        <div 
+          className="prose max-w-none"
+          dangerouslySetInnerHTML={{ __html: item.content_data.text }}
+        />
       )
     
     case 'quote':
@@ -71,21 +72,32 @@ function ContentRenderer({ item }: { item: ContentItem }) {
             className="w-full h-auto rounded-lg"
           />
           {item.content_data.caption && (
-            <p className="text-sm text-gray-600 mt-2 italic">{item.content_data.caption}</p>
+            <div 
+              className="text-sm text-gray-600 mt-2 italic"
+              dangerouslySetInnerHTML={{ __html: item.content_data.caption }}
+            />
           )}
         </div>
       )
     
     case 'video':
       return (
-        <div className="aspect-video">
-          <iframe
-            src={item.content_data.embedUrl}
-            title={item.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="w-full h-full rounded-lg"
-          />
+        <div>
+          <div className="aspect-video">
+            <iframe
+              src={item.content_data.embedUrl}
+              title={item.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full rounded-lg"
+            />
+          </div>
+          {item.content_data.caption && (
+            <div 
+              className="text-sm text-gray-600 mt-2 italic"
+              dangerouslySetInnerHTML={{ __html: item.content_data.caption }}
+            />
+          )}
         </div>
       )
     
@@ -107,6 +119,7 @@ function ResultsContent() {
   const [content, setContent] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
+  const [selectedKeywords, setSelectedKeywords] = useState<Array<{ id: string; name: string }>>([])
 
   const toggleExpand = (id: string) => {
     const newSet = new Set(expandedCards)
@@ -125,6 +138,16 @@ function ResultsContent() {
       if (keywordIds.length === 0) {
         setLoading(false)
         return
+      }
+
+      // Fetch the selected keywords names
+      const { data: keywordsData } = await supabase
+        .from('keywords')
+        .select('*')
+        .in('id', keywordIds)
+      
+      if (keywordsData) {
+        setSelectedKeywords(keywordsData)
       }
 
       // Use the simpler query approach
@@ -211,10 +234,23 @@ function ResultsContent() {
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <Link href="/" className="text-blue-500 hover:underline">
-            ← Back to selection
+        {/* Top Right Selection Pills */}
+        <div className="flex justify-end items-center gap-2 mb-8">
+          <Link 
+            href="/" 
+            className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
+            aria-label="Back to selection"
+          >
+            ✕
           </Link>
+          {selectedKeywords.map((keyword) => (
+            <span
+              key={keyword.id}
+              className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full"
+            >
+              {keyword.name}
+            </span>
+          ))}
         </div>
 
         <h1 className="text-3xl font-bold mb-8">Resources for You</h1>
@@ -228,7 +264,6 @@ function ResultsContent() {
               
               return (
                 <div key={item.id} className="bg-white p-6 rounded-lg shadow break-inside-avoid relative">
-                  <h2 className="text-xl font-semibold mb-4">{item.title}</h2>
                   <ContentRenderer item={item} />
                   
                   {/* Expand/Collapse Button */}
