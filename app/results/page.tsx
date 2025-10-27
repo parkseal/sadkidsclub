@@ -13,7 +13,7 @@ interface ContentItem {
   content_data: any
   file_url: string | null
   matchCount?: number
-  created_at: string
+  created_at: string 
   keywords?: Array<{ id: string; name: string }>
 }
 
@@ -159,6 +159,17 @@ function ResultsContent() {
   const searchParams = useSearchParams()
   const [content, setContent] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
+
+  const toggleExpand = (id: string) => {
+    const newSet = new Set(expandedCards)
+    if (newSet.has(id)) {
+      newSet.delete(id)
+    } else {
+      newSet.add(id)
+    }
+    setExpandedCards(newSet)
+  }
 
   useEffect(() => {
     async function fetchContent() {
@@ -185,9 +196,14 @@ function ResultsContent() {
           const existing = acc.find(i => i.id === item.id)
           
           if (existing) {
+            // Add this keyword to the existing item
+            if (item.content_keywords?.keywords) {
+              existing.keywords.push(item.content_keywords.keywords)
+            }
             return acc
           }
 
+          // Get all keywords for this item from the duplicated rows
           const itemKeywords = data
             .filter(d => d.id === item.id)
             .map((d: any) => ({
@@ -195,14 +211,19 @@ function ResultsContent() {
               name: d.content_keywords.keywords.name
             }))
           
-          const itemKeywordIds = itemKeywords.map(k => k.id)
-          const matchCount = keywordIds.filter(kid => itemKeywordIds.includes(kid)).length
+          const keywordIds_list = itemKeywords.map(k => k.id)
+          const matchCount = keywordIds.filter(kid => keywordIds_list.includes(kid)).length
           
           acc.push({
-            ...item,
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            content_type: item.content_type,
+            content_data: item.content_data,
+            file_url: item.file_url,
+            created_at: item.created_at,
             matchCount,
-            keywords: itemKeywords,
-            content_keywords: undefined
+            keywords: itemKeywords
           })
           
           return acc
@@ -238,9 +259,49 @@ function ResultsContent() {
           <p className="text-gray-600">No resources found for this combination. Try different keywords.</p>
         ) : (
           <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-            {content.map((item) => (
-              <ContentCard key={item.id} item={item} />
-            ))}
+            {content.map((item) => {
+              const isExpanded = expandedCards.has(item.id)
+              
+              return (
+                <div key={item.id} className="bg-white p-6 rounded-lg shadow break-inside-avoid relative">
+                  <h2 className="text-xl font-semibold mb-4">{item.title}</h2>
+                  <ContentRenderer item={item} />
+                  
+                  {/* Expand/Collapse Button */}
+                  <button
+                    onClick={() => toggleExpand(item.id)}
+                    className="absolute bottom-4 right-4 text-sm text-blue-500 hover:text-blue-700"
+                  >
+                    {isExpanded ? '▲' : '▼'}
+                  </button>
+                  
+                  {/* Expanded Metadata */}
+                  {isExpanded && (
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      {/* Keywords Pills */}
+                      <div className="mb-3">
+                        <p className="text-xs font-semibold text-gray-600 mb-2">Keywords:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {item.keywords?.map((keyword) => (
+                            <span
+                              key={keyword.id}
+                              className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+                            >
+                              {keyword.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Date */}
+                      <div className="text-xs text-gray-500">
+                        Posted: {new Date(item.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
