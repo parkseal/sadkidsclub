@@ -14,7 +14,7 @@ interface ContentItem {
   file_url: string | null
   matchCount?: number
   created_at: string 
-  keywords?: Array<{ id: string; name: string }>
+  tags?: Array<{ id: string; name: string }>
 }
 
 function ContentRenderer({ item }: { item: ContentItem }) {
@@ -119,7 +119,7 @@ function ResultsContent() {
   const [content, setContent] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
-  const [selectedKeywords, setSelectedKeywords] = useState<Array<{ id: string; name: string }>>([])
+  const [selectedTags, setSelectedTags] = useState<Array<{ id: string; name: string }>>([])
 
   const toggleExpand = (id: string) => {
     const newSet = new Set(expandedCards)
@@ -133,32 +133,32 @@ function ResultsContent() {
 
   useEffect(() => {
     async function fetchContent() {
-      const keywordIds = searchParams.get('keywords')?.split(',') || []
+      const tagIds = searchParams.get('tags')?.split(',') || []
       
-      if (keywordIds.length === 0) {
+      if (tagIds.length === 0) {
         setLoading(false)
         return
       }
 
-      // Fetch the selected keywords names
-      const { data: keywordsData } = await supabase
-        .from('keywords')
+      // Fetch the selected tags names
+      const { data: tagsData } = await supabase
+        .from('tags')
         .select('*')
-        .in('id', keywordIds)
+        .in('id', tagIds)
       
-      if (keywordsData) {
-        setSelectedKeywords(keywordsData)
+      if (tagsData) {
+        setSelectedTags(tagsData)
       }
 
       // Use the simpler query approach
       const { data, error } = await supabase
-        .from('content_keywords')
+        .from('content_tags')
         .select(`
-          keyword_id,
+          tag_id,
           content_items(*),
-          keywords(*)
+          tags(*)
         `)
-        .in('keyword_id', keywordIds)
+        .in('tag_id', tagIds)
 
       if (error) {
         console.error('Supabase error:', error)
@@ -187,17 +187,17 @@ function ResultsContent() {
               content_data: content.content_data,
               file_url: content.file_url,
               created_at: content.created_at,
-              keywords: [],
+              tags: [],
               matchCount: 0
             })
           }
           
-          // Add keyword if it exists and isn't already added
+          // Add tag if it exists and isn't already added
           const item = contentMap.get(contentId)
-          if (row.keywords && !item.keywords.find((k: any) => k.id === row.keywords.id)) {
-            item.keywords.push({
-              id: row.keywords.id,
-              name: row.keywords.name
+          if (row.tags && !item.tags.find((k: any) => k.id === row.tags.id)) {
+            item.tags.push({
+              id: row.tags.id,
+              name: row.tags.name
             })
           }
         })
@@ -207,8 +207,8 @@ function ResultsContent() {
         
         // Calculate match counts
         contentArray.forEach(item => {
-          item.matchCount = item.keywords.filter((k: any) => 
-            keywordIds.includes(k.id)
+          item.matchCount = item.tags.filter((k: any) => 
+            tagIds.includes(k.id)
           ).length
         })
         
@@ -243,12 +243,12 @@ function ResultsContent() {
           >
             ✕
           </Link>
-          {selectedKeywords.map((keyword) => (
+          {selectedTags.map((tag) => (
             <span
-              key={keyword.id}
+              key={tag.id}
               className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full"
             >
-              {keyword.name}
+              {tag.name}
             </span>
           ))}
         </div>
@@ -256,7 +256,7 @@ function ResultsContent() {
         <h1 className="text-3xl font-bold mb-8">Resources for You</h1>
 
         {content.length === 0 ? (
-          <p className="text-gray-600">No resources found for this combination. Try different keywords.</p>
+          <p className="text-gray-600">No resources found for this combination. Try different tags.</p>
         ) : (
           <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
             {content.map((item) => {
@@ -277,16 +277,16 @@ function ResultsContent() {
                   {/* Expanded Metadata */}
                   {isExpanded && (
                     <div className="mt-6 pt-4 border-t border-gray-200">
-                      {/* Keywords Pills */}
+                      {/* Tags Pills */}
                       <div className="mb-3">
-                        <p className="text-xs font-semibold text-gray-600 mb-2">Keywords:</p>
+                        <p className="text-xs font-semibold text-gray-600 mb-2">Tags:</p>
                         <div className="flex flex-wrap gap-2">
-                          {item.keywords?.map((keyword) => (
+                          {item.tags?.map((tag) => (
                             <span
-                              key={keyword.id}
+                              key={tag.id}
                               className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
                             >
-                              {keyword.name}
+                              {tag.name}
                             </span>
                           ))}
                         </div>

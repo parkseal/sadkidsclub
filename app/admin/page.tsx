@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
-interface Keyword {
+interface Tag {
   id: string
   name: string
   contentCount?: number
 }
 
 export default function AdminPage() {
-  const [keywords, setKeywords] = useState<Keyword[]>([])
-  const [newKeyword, setNewKeyword] = useState('')
+  const [tags, setTags] = useState<Tag[]>([])
+  const [newTag, setNewTag] = useState('')
   
   // Content form fields
   const [contentTitle, setContentTitle] = useState('')
@@ -28,60 +28,60 @@ export default function AdminPage() {
   const [videoEmbedUrl, setVideoEmbedUrl] = useState('')
   const [videoCaption, setVideoCaption] = useState('')
   
-  const [selectedKeywords, setSelectedKeywords] = useState<Set<string>>(new Set())
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    fetchKeywords()
+    fetchTags()
   }, [])
 
-  async function fetchKeywords() {
-    const { data: keywordsData } = await supabase.from('keywords').select('*').order('name')
+  async function fetchTags() {
+    const { data: tagsData } = await supabase.from('tags').select('*').order('name')
     
-    if (keywordsData) {
-      // Fetch content counts for each keyword
+    if (tagsData) {
+      // Fetch content counts for each tag
       const { data: countsData } = await supabase
-        .from('content_keywords')
-        .select('keyword_id')
+        .from('content_tags')
+        .select('tag_id')
       
       const countMap = new Map()
       countsData?.forEach((row: any) => {
-        countMap.set(row.keyword_id, (countMap.get(row.keyword_id) || 0) + 1)
+        countMap.set(row.tag_id, (countMap.get(row.tag_id) || 0) + 1)
       })
       
-      const keywordsWithCounts = keywordsData.map(k => ({
+      const tagsWithCounts = tagsData.map(k => ({
         ...k,
         contentCount: countMap.get(k.id) || 0
       }))
       
-      setKeywords(keywordsWithCounts)
+      setTags(tagsWithCounts)
     }
   }
 
-  async function addKeyword() {
-    if (!newKeyword.trim()) return
+  async function addTag() {
+    if (!newTag.trim()) return
     
     const { error } = await supabase
-      .from('keywords')
-      .insert({ name: newKeyword.toLowerCase().trim() })
+      .from('tags')
+      .insert({ name: newTag.toLowerCase().trim() })
     
     if (!error) {
-      setNewKeyword('')
-      fetchKeywords()
+      setNewTag('')
+      fetchTags()
     } else {
-      alert('Error adding keyword: ' + error.message)
+      alert('Error adding tag: ' + error.message)
     }
   }
 
-  async function deleteKeyword(id: string) {
-    if (!confirm('Delete this keyword?')) return
+  async function deleteTag(id: string) {
+    if (!confirm('Delete this tag?')) return
     
-    await supabase.from('keywords').delete().eq('id', id)
-    fetchKeywords()
+    await supabase.from('tags').delete().eq('id', id)
+    fetchTags()
   }
 
   async function addContent() {
-    if (!contentTitle.trim() || selectedKeywords.size === 0) {
-      alert('Title and at least one keyword required')
+    if (!contentTitle.trim() || selectedTags.size === 0) {
+      alert('Title and at least one tag required')
       return
     }
 
@@ -163,22 +163,22 @@ export default function AdminPage() {
       return
     }
 
-    const keywordLinks = Array.from(selectedKeywords).map(kid => ({
+    const tagLinks = Array.from(selectedTags).map(kid => ({
       content_id: newContent.id,
-      keyword_id: kid
+      tag_id: kid
     }))
 
     const { error: linkError } = await supabase
-      .from('content_keywords')
-      .insert(keywordLinks)
+      .from('content_tags')
+      .insert(tagLinks)
 
     if (linkError) {
-      alert('Error linking keywords: ' + linkError.message)
+      alert('Error linking tags: ' + linkError.message)
       return
     }
 
     resetForm()
-    fetchKeywords()
+    fetchTags()
     alert('Content added successfully!')
   }
 
@@ -193,17 +193,17 @@ export default function AdminPage() {
     setImageCaption('')
     setVideoEmbedUrl('')
     setVideoCaption('')
-    setSelectedKeywords(new Set())
+    setSelectedTags(new Set())
   }
 
-  const toggleKeyword = (id: string) => {
-    const newSet = new Set(selectedKeywords)
+  const toggleTag = (id: string) => {
+    const newSet = new Set(selectedTags)
     if (newSet.has(id)) {
       newSet.delete(id)
     } else {
       newSet.add(id)
     }
-    setSelectedKeywords(newSet)
+    setSelectedTags(newSet)
   }
 
   const contentTypes = [
@@ -352,14 +352,14 @@ export default function AdminPage() {
             )}
 
             <div>
-              <p className="font-semibold mb-2">Select Keywords (at least 1):</p>
+              <p className="font-semibold mb-2">Select Tags (at least 1):</p>
               <div className="grid grid-cols-3 gap-2">
-                {keywords.map((k: Keyword) => (
+                {tags.map((k: Tag) => (
                   <button
                     key={k.id}
-                    onClick={() => toggleKeyword(k.id)}
+                    onClick={() => toggleTag(k.id)}
                     className={`p-2 rounded border-2 text-sm ${
-                      selectedKeywords.has(k.id)
+                      selectedTags.has(k.id)
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200'
                     }`}
@@ -379,21 +379,21 @@ export default function AdminPage() {
           </div>
         </section>
 
-        {/* Keywords Section - Now Second */}
+        {/* Tags Section - Now Second */}
         <section className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-4">Manage Keywords</h2>
+          <h2 className="text-2xl font-bold mb-4">Manage Tags</h2>
           
           <div className="flex gap-2 mb-4">
             <input
               type="text"
-              value={newKeyword}
-              onChange={(e) => setNewKeyword(e.target.value)}
-              placeholder="New keyword..."
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              placeholder="New tag..."
               className="flex-1 px-4 py-2 border rounded"
-              onKeyPress={(e) => e.key === 'Enter' && addKeyword()}
+              onKeyPress={(e) => e.key === 'Enter' && addTag()}
             />
             <button
-              onClick={addKeyword}
+              onClick={addTag}
               className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               Add
@@ -401,7 +401,7 @@ export default function AdminPage() {
           </div>
 
           <div className="space-y-2">
-            {keywords.map((k: Keyword) => (
+            {tags.map((k: Tag) => (
               <div key={k.id} className="flex justify-between items-center p-2 border rounded">
                 <div className="flex items-center gap-3">
                   <span>{k.name}</span>
@@ -410,7 +410,7 @@ export default function AdminPage() {
                   </span>
                 </div>
                 <button
-                  onClick={() => deleteKeyword(k.id)}
+                  onClick={() => deleteTag(k.id)}
                   className="text-red-500 hover:text-red-700"
                 >
                   Delete

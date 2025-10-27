@@ -21,44 +21,44 @@ export default function ResultsContent() {
 
   useEffect(() => {
   async function fetchContent() {
-    const keywordIds = searchParams.get('keywords')?.split(',') || []
+    const tagIds = searchParams.get('tags')?.split(',') || []
     
-    if (keywordIds.length === 0) {
+    if (tagIds.length === 0) {
       setLoading(false)
       return
     }
 
-    // Get all content that matches ANY of the selected keywords
+    // Get all content that matches ANY of the selected tags
     const { data, error } = await supabase
       .from('content_items')
       .select(`
         *,
-        content_keywords!inner(keyword_id)
+        content_tags!inner(tag_id)
       `)
-      .in('content_keywords.keyword_id', keywordIds)
+      .in('content_tags.tag_id', tagIds)
 
     if (data) {
-      // Count how many selected keywords each item matches
+      // Count how many selected tags each item matches
       const contentWithScores = data.reduce((acc: any[], item) => {
-        // Check if we've already processed this item (due to multiple keyword matches)
+        // Check if we've already processed this item (due to multiple tag matches)
         const existing = acc.find(i => i.id === item.id)
         
         if (existing) {
           return acc
         }
 
-        // Get all keywords for this item
-        const itemKeywords = data
+        // Get all tags for this item
+        const itemTags = data
           .filter(d => d.id === item.id)
-          .map((d: any) => d.content_keywords.keyword_id)
+          .map((d: any) => d.content_tags.tag_id)
         
         // Count matches
-        const matchCount = keywordIds.filter(kid => itemKeywords.includes(kid)).length
+        const matchCount = tagIds.filter(kid => itemTags.includes(kid)).length
         
         acc.push({
           ...item,
           matchCount,
-          content_keywords: undefined // Clean up
+          content_tags: undefined // Clean up
         })
         
         return acc
@@ -83,7 +83,7 @@ export default function ResultsContent() {
   if (content.length === 0) {
     return (
       <p className="text-gray-600">
-        No resources found for this combination. Try different keywords.
+        Nothing found. Try different tags.
       </p>
     )
   }

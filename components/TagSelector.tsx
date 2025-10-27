@@ -3,28 +3,28 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
-interface Keyword {
+interface Tag {
   id: string
   name: string
 }
 
-export default function KeywordSelector({ onSubmit }: { onSubmit: (ids: string[]) => void }) {
-  const [keywords, setKeywords] = useState<Keyword[]>([])
+export default function TagSelector({ onSubmit }: { onSubmit: (ids: string[]) => void }) {
+  const [tags, setTags] = useState<Tag[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    async function fetchKeywords() {
+    async function fetchTags() {
       const { data } = await supabase
-        .from('keywords')
+        .from('tags')
         .select('*')
         .order('name')
       
-      if (data) setKeywords(data)
+      if (data) setTags(data)
     }
-    fetchKeywords()
+    fetchTags()
   }, [])
 
-  const toggleKeyword = (id: string) => {
+  const toggleTag = (id: string) => {
     const newSelected = new Set(selected)
     if (newSelected.has(id)) {
       newSelected.delete(id)
@@ -40,17 +40,17 @@ export default function KeywordSelector({ onSubmit }: { onSubmit: (ids: string[]
       <p className="text-gray-600 mb-8">Select what you're feeling:</p>
       
       <div className="grid grid-cols-2 gap-4 mb-8">
-        {keywords.map((keyword) => (
+        {tags.map((tag) => (
           <button
-            key={keyword.id}
-            onClick={() => toggleKeyword(keyword.id)}
+            key={tag.id}
+            onClick={() => toggleTag(tag.id)}
             className={`p-4 rounded-lg border-2 transition-colors ${
-              selected.has(keyword.id)
+              selected.has(tag.id)
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
-            {keyword.name}
+            {tag.name}
           </button>
         ))}
       </div>

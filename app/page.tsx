@@ -4,30 +4,30 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-interface Keyword {
+interface Tag {
   id: string
   name: string
 }
 
 export default function HomePage() {
-  const [keywords, setKeywords] = useState<Keyword[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [showKeywords, setShowKeywords] = useState(false)
+  const [showTags, setShowTags] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    async function fetchKeywords() {
+    async function fetchTags() {
       const { data } = await supabase
-        .from('keywords')
+        .from('tags')
         .select('*')
         .order('name')
       
-      if (data) setKeywords(data)
+      if (data) setTags(data)
     }
-    fetchKeywords()
+    fetchTags()
   }, [])
 
-  const toggleKeyword = (id: string) => {
+  const toggleTag = (id: string) => {
     const newSelected = new Set(selected)
     if (newSelected.has(id)) {
       newSelected.delete(id)
@@ -39,8 +39,8 @@ export default function HomePage() {
 
   const handleSubmit = () => {
     if (selected.size === 0) return
-    const keywordIds = Array.from(selected).join(',')
-    router.push(`/results?keywords=${keywordIds}`)
+    const tagIds = Array.from(selected).join(',')
+    router.push(`/results?tags=${tagIds}`)
   }
 
   return (
@@ -50,9 +50,9 @@ export default function HomePage() {
         
         <div className="flex justify-center mb-8">
           <button
-            onClick={() => setShowKeywords(!showKeywords)}
+            onClick={() => setShowTags(!showTags)}
             className="cursor-pointer hover:opacity-80 transition-opacity"
-            aria-label="Toggle keyword selection"
+            aria-label="Toggle tag selection"
           >
             <iframe
               src="https://giphy.com/embed/xX0ezRXQtpVzRXqTeY"
@@ -67,21 +67,21 @@ export default function HomePage() {
         
         <div 
           className={`overflow-hidden transition-all duration-700 ease-in-out ${
-            showKeywords ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+            showTags ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           <div className="grid grid-cols-2 gap-4 mb-8">
-            {keywords.map((keyword) => (
+            {tags.map((tag) => (
               <button
-                key={keyword.id}
-                onClick={() => toggleKeyword(keyword.id)}
+                key={tag.id}
+                onClick={() => toggleTag(tag.id)}
                 className={`p-4 rounded-lg border-2 transition-colors ${
-                  selected.has(keyword.id)
+                  selected.has(tag.id)
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                {keyword.name}
+                {tag.name}
               </button>
             ))}
           </div>
