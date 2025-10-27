@@ -14,7 +14,6 @@ export default function AdminPage() {
   
   // Content form fields
   const [contentTitle, setContentTitle] = useState('')
-  const [contentDesc, setContentDesc] = useState('')
   const [contentType, setContentType] = useState<'text' | 'quote' | 'link' | 'image' | 'video'>('text')
   
   // Type-specific fields
@@ -23,10 +22,10 @@ export default function AdminPage() {
   const [quoteSource, setQuoteSource] = useState('')
   const [quoteSourceUrl, setQuoteSourceUrl] = useState('')
   const [linkUrl, setLinkUrl] = useState('')
-  const [linkText, setLinkText] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [imageCaption, setImageCaption] = useState('')
   const [videoEmbedUrl, setVideoEmbedUrl] = useState('')
+  const [videoCaption, setVideoCaption] = useState('')
   
   const [selectedKeywords, setSelectedKeywords] = useState<Set<string>>(new Set())
 
@@ -95,10 +94,7 @@ export default function AdminPage() {
           alert('URL required')
           return
         }
-        contentData = { 
-          url: linkUrl, 
-          linkText: linkText || 'Visit Link' 
-        }
+        contentData = { url: linkUrl }
         break
       
       case 'image':
@@ -126,7 +122,10 @@ export default function AdminPage() {
           const videoId = videoEmbedUrl.split('youtu.be/')[1].split('?')[0]
           embedUrl = `https://www.youtube.com/embed/${videoId}`
         }
-        contentData = { embedUrl }
+        contentData = { 
+          embedUrl,
+          ...(videoCaption && { caption: videoCaption })
+        }
         break
     }
 
@@ -135,7 +134,7 @@ export default function AdminPage() {
       .from('content_items')
       .insert({
         title: contentTitle,
-        description: contentDesc,
+        description: '',
         content_type: contentType,
         content_data: contentData
       })
@@ -169,16 +168,15 @@ export default function AdminPage() {
 
   function resetForm() {
     setContentTitle('')
-    setContentDesc('')
     setContentText('')
     setQuote('')
     setQuoteSource('')
     setQuoteSourceUrl('')
     setLinkUrl('')
-    setLinkText('')
     setImageUrl('')
     setImageCaption('')
     setVideoEmbedUrl('')
+    setVideoCaption('')
     setSelectedKeywords(new Set())
   }
 
@@ -244,14 +242,6 @@ export default function AdminPage() {
               placeholder="Title"
               className="w-full px-4 py-2 border rounded"
             />
-            
-            <input
-              type="text"
-              value={contentDesc}
-              onChange={(e) => setContentDesc(e.target.value)}
-              placeholder="Description (optional)"
-              className="w-full px-4 py-2 border rounded"
-            />
 
             <select
               value={contentType}
@@ -305,22 +295,13 @@ export default function AdminPage() {
 
             {/* Link fields */}
             {contentType === 'link' && (
-              <>
-                <input
-                  type="url"
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="URL"
-                  className="w-full px-4 py-2 border rounded"
-                />
-                <input
-                  type="text"
-                  value={linkText}
-                  onChange={(e) => setLinkText(e.target.value)}
-                  placeholder="Link text (e.g., Visit Crisis Hotline)"
-                  className="w-full px-4 py-2 border rounded"
-                />
-              </>
+              <input
+                type="url"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="URL"
+                className="w-full px-4 py-2 border rounded"
+              />
             )}
 
             {/* Image fields */}
@@ -354,6 +335,13 @@ export default function AdminPage() {
                   value={videoEmbedUrl}
                   onChange={(e) => setVideoEmbedUrl(e.target.value)}
                   placeholder="YouTube or Vimeo URL"
+                  className="w-full px-4 py-2 border rounded"
+                />
+                <input
+                  type="text"
+                  value={videoCaption}
+                  onChange={(e) => setVideoCaption(e.target.value)}
+                  placeholder="Caption (optional)"
                   className="w-full px-4 py-2 border rounded"
                 />
                 <p className="text-sm text-gray-600">
