@@ -253,10 +253,8 @@ function ResultsContent() {
           ))}
         </div>
 
-        <h1 className="text-3xl font-bold mb-8">Resources for You</h1>
-
         {content.length === 0 ? (
-          <p className="text-gray-600">No resources found for this combination. Try different tags.</p>
+          <p className="text-gray-600">Nothing found. Try different tags.</p>
         ) : (
           <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
             {content.map((item) => {
