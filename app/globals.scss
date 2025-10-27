@@ -1,21 +1,18 @@
+// app/globals.scss
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+$primary-color: #3490dc;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.custom-component {
+  @apply flex items-center;
+  
+  &:hover {
+    background-color: $primary-color;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  
+  .nested {
+    @apply text-gray-700;
+  }
 }

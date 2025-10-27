@@ -4,4 +4,13 @@ const config = {
   },
 };
 
+// postcss.config.js
+module.exports = {
+  parser: 'postcss-scss',
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+
 export default config;
