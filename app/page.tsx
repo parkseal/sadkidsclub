@@ -51,17 +51,10 @@ export default function HomePage() {
         <div className="flex justify-center mb-8">
           <button
             onClick={() => setShowTags(!showTags)}
-            className="cursor-pointer hover:opacity-80 transition-opacity"
+            className="text-6xl hover:scale-110 transition-transform cursor-pointer"
             aria-label="Toggle tag selection"
           >
-            <iframe
-              src="https://giphy.com/embed/xX0ezRXQtpVzRXqTeY"
-              width="200"
-              height="200"
-              frameBorder="0"
-              className="giphy-embed pointer-events-none"
-              allowFullScreen
-            />
+            💭
           </button>
         </div>
         
@@ -91,7 +84,7 @@ export default function HomePage() {
             disabled={selected.size === 0}
             className="w-full bg-blue-500 text-white py-3 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
           >
-            enter
+            Find Resources ({selected.size})
           </button>
         </div>
       </div>

@@ -1,6 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@theme {
+  --color-gray-700: #374151;
+}
 .custom-component {
   @apply flex items-center;
 }

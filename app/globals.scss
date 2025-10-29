@@ -5,6 +5,10 @@
 
 $primary-color: #3490dc;
 
+@theme {
+  --color-gray-700: #374151;
+}
+
 .custom-component {
   @apply flex items-center;
   
