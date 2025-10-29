@@ -1,3 +1,5 @@
+/* ADMIN LAYOUT */
+
 'use client'
 
 import { useState, useEffect } from 'react'
