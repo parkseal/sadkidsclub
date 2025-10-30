@@ -12,10 +12,9 @@ interface Tag {
 }
 
 const BACKGROUND_IMAGES = [
-  'https://images.unsplash.com/photo-1557683316-973673baf926',
-  'https://images.unsplash.com/photo-1579546929518-9e396f3cc809',
-  'https://images.unsplash.com/photo-1557682250-33bd709cbe85',
-  // Add more URLs
+  'https://images.unsplash.com/photo-1590547889805-a71bf012603f',
+  'https://images.unsplash.com/photo-1608890457730-84fc54828b50',
+  'https://images.unsplash.com/photo-1730132348741-cb45165fe404'
 ]
 
 export default function HomePage() {
