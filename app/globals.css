@@ -2,16 +2,16 @@
 
 :root {
   --background: #3d3d3d;
-  --foreground: #e8dcc8;
-  --accent-sage: #7a9b8e;
-  --accent-mauve: #b4a5a5;
-  --accent-pink: #f4d5d8;
-  --accent-peach: #ffd89b;
-  --accent-light: #c9d4e5;
+  --foreground: #EADBD0;
+  --accent-gray: #666576;
+  --accent-green: #BDC390;
+  --accent-dkgreen: #3A4947;
 }
+
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
 }

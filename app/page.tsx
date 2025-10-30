@@ -1,3 +1,5 @@
+/* APP LANDING PAGE */
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -9,11 +11,24 @@ interface Tag {
   name: string
 }
 
+const BACKGROUND_IMAGES = [
+  'https://images.unsplash.com/photo-1557683316-973673baf926',
+  'https://images.unsplash.com/photo-1579546929518-9e396f3cc809',
+  'https://images.unsplash.com/photo-1557682250-33bd709cbe85',
+  // Add more URLs
+]
+
 export default function HomePage() {
   const [tags, setTags] = useState<Tag[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [showTags, setShowTags] = useState(false)
+  const [bgImage, setBgImage] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    const randomImage = BACKGROUND_IMAGES[Math.floor(Math.random() * BACKGROUND_IMAGES.length)]
+    setBgImage(randomImage)
+  }, [])
 
   useEffect(() => {
     async function fetchTags() {
@@ -44,9 +59,15 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center p-8"
+      style={{
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
       <div className="max-w-2xl w-full">
-        <h1 className="text-4xl font-bold mb-8 text-center">Sadkidsclub</h1>
+        <img src="../public/images/logo-skc.png" alt="sadkidsclub"></img>
         
         <div className="flex justify-center mb-8">
           <button
@@ -70,8 +91,6 @@ export default function HomePage() {
                 onClick={() => toggleTag(tag.id)}
                 className={`p-4 rounded-lg border-2 transition-colors ${
                   selected.has(tag.id)
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 {tag.name}
@@ -82,9 +101,9 @@ export default function HomePage() {
           <button
             onClick={handleSubmit}
             disabled={selected.size === 0}
-            className="w-full bg-blue-500 text-white py-3 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+            className="w-full py-3 rounded-lg disabled:cursor-not-allowed transition-colors"
           >
-            Find Resources ({selected.size})
+            generate ({selected.size})
           </button>
         </div>
       </div>
