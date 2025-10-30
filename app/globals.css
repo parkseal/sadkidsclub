@@ -28,7 +28,7 @@ body {
     background: var(--gray);
 }
 
-.grid button:active {
+.grid button:focus {
     background: var(--gray);
 }
 

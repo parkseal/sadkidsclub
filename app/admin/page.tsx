@@ -183,13 +183,12 @@ export default function AdminPage() {
     resetForm()
     fetchTags()
     
-    // Show alert briefly
     alert('Content added successfully!')
     setTimeout(() => {
       // Clear the alert by closing any open alert dialogs
       const alertElement = document.querySelector('[role="alert"]')
       if (alertElement) alertElement.remove()
-    }, 1000)
+    }, 100)
   }
 
   function resetForm() {

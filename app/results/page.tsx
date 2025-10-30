@@ -305,13 +305,7 @@ function ResultsContent() {
       <div className="max-w-6xl mx-auto">
         {/* Top Right Selection Pills */}
         <div className="flex justify-end items-center gap-2 mb-8">
-          <Link 
-            href="/" 
-            className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
-            aria-label="Back to selection"
-          >
-            ✕
-          </Link>
+          
           {selectedTags.map((tag) => (
             <span
               key={tag.id}
@@ -320,6 +314,13 @@ function ResultsContent() {
               {tag.name}
             </span>
           ))}
+          <Link 
+            href="/" 
+            className="w-8 h-8 rounded-full hover:bg-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
+            aria-label="Back to selection"
+          >
+            ✕
+          </Link>
         </div>
 
         {allContent.length === 0 ? (
