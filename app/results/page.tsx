@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
@@ -118,10 +118,16 @@ export default function ResultsPage() {
 
 function ResultsContent() {
   const searchParams = useSearchParams()
-  const [content, setContent] = useState<ContentItem[]>([])
+  const [allContent, setAllContent] = useState<ContentItem[]>([])
+  const [displayedContent, setDisplayedContent] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
   const [selectedTags, setSelectedTags] = useState<Array<{ id: string; name: string }>>([])
+  const [hasMore, setHasMore] = useState(true)
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+  const ITEMS_PER_LOAD = 9
 
   const toggleExpand = (id: string) => {
     const newSet = new Set(expandedCards)
@@ -131,6 +137,16 @@ function ResultsContent() {
       newSet.add(id)
     }
     setExpandedCards(newSet)
+  }
+
+  // Shuffle array using Fisher-Yates algorithm
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled
   }
 
   useEffect(() => {
@@ -168,15 +184,13 @@ function ResultsContent() {
         return
       }
 
-      console.log('Raw data:', data)
-
       if (data && data.length > 0) {
         // Group by content item
         const contentMap = new Map()
         
         data.forEach((row: any) => {
           const content = row.content_items
-          if (!content) return // Skip if content_items is null
+          if (!content) return
           
           const contentId = content.id
           
@@ -194,7 +208,6 @@ function ResultsContent() {
             })
           }
           
-          // Add tag if it exists and isn't already added
           const item = contentMap.get(contentId)
           if (row.tags && !item.tags.find((k: any) => k.id === row.tags.id)) {
             item.tags.push({
@@ -214,13 +227,30 @@ function ResultsContent() {
           ).length
         })
         
-        // Sort by match count
-        contentArray.sort((a, b) => b.matchCount - a.matchCount)
+        // Group by match count
+        const weightBands = new Map<number, ContentItem[]>()
+        contentArray.forEach(item => {
+          const count = item.matchCount || 0
+          if (!weightBands.has(count)) {
+            weightBands.set(count, [])
+          }
+          weightBands.get(count)!.push(item)
+        })
         
-        console.log('Processed content:', contentArray)
-        setContent(contentArray)
+        // Shuffle within each weight band and combine
+        const sortedWeights = Array.from(weightBands.keys()).sort((a, b) => b - a)
+        const shuffledContent: ContentItem[] = []
+        sortedWeights.forEach(weight => {
+          const band = weightBands.get(weight)!
+          shuffledContent.push(...shuffleArray(band))
+        })
+        
+        setAllContent(shuffledContent)
+        setDisplayedContent(shuffledContent.slice(0, ITEMS_PER_LOAD))
+        setHasMore(shuffledContent.length > ITEMS_PER_LOAD)
       } else {
-        setContent([])
+        setAllContent([])
+        setDisplayedContent([])
       }
       
       setLoading(false)
@@ -228,6 +258,43 @@ function ResultsContent() {
 
     fetchContent()
   }, [searchParams])
+
+  const loadMore = useCallback(() => {
+    if (!hasMore || loading) return
+    
+    const currentLength = displayedContent.length
+    const nextBatch = allContent.slice(currentLength, currentLength + ITEMS_PER_LOAD)
+    
+    if (nextBatch.length > 0) {
+      setDisplayedContent(prev => [...prev, ...nextBatch])
+      setHasMore(currentLength + nextBatch.length < allContent.length)
+    } else {
+      setHasMore(false)
+    }
+  }, [allContent, displayedContent, hasMore, loading])
+
+  useEffect(() => {
+    if (loading || !hasMore) return
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current)
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+    }
+  }, [loading, hasMore, loadMore])
 
   if (loading) {
     return <div className="p-8 text-center">Loading...</div>
@@ -255,53 +322,62 @@ function ResultsContent() {
           ))}
         </div>
 
-        {content.length === 0 ? (
+        {allContent.length === 0 ? (
           <p className="text-gray-600">Nothing found. Try different tags.</p>
         ) : (
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-            {content.map((item) => {
-              const isExpanded = expandedCards.has(item.id)
-              
-              return (
-                <div key={item.id} className="bg-white p-6 rounded-lg shadow break-inside-avoid relative">
-                  <ContentRenderer item={item} />
-                  
-                  {/* Expand/Collapse Button */}
-                  <button
-                    onClick={() => toggleExpand(item.id)}
-                    className="absolute bottom-4 right-4 text-sm text-blue-500 hover:text-blue-700"
-                  >
-                    {isExpanded ? '▲' : '▼'}
-                  </button>
-                  
-                  {/* Expanded Metadata */}
-                  {isExpanded && (
-                    <div className="mt-6 pt-4 border-t border-gray-200">
-                      {/* Tags Pills */}
-                      <div className="mb-3">
-                        <p className="text-xs font-semibold text-gray-600 mb-2">Tags:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {item.tags?.map((tag) => (
-                            <span
-                              key={tag.id}
-                              className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
-                            >
-                              {tag.name}
-                            </span>
-                          ))}
+          <>
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+              {displayedContent.map((item) => {
+                const isExpanded = expandedCards.has(item.id)
+                
+                return (
+                  <div key={item.id} className="bg-white p-6 rounded-lg shadow break-inside-avoid relative">
+                    <ContentRenderer item={item} />
+                    
+                    {/* Expand/Collapse Button */}
+                    <button
+                      onClick={() => toggleExpand(item.id)}
+                      className="absolute bottom-4 right-4 text-sm text-blue-500 hover:text-blue-700"
+                    >
+                      {isExpanded ? '▲' : '▼'}
+                    </button>
+                    
+                    {/* Expanded Metadata */}
+                    {isExpanded && (
+                      <div className="mt-6 pt-4 border-t border-gray-200">
+                        {/* Tags Pills */}
+                        <div className="mb-3">
+                          <p className="text-xs font-semibold text-gray-600 mb-2">Tags:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {item.tags?.map((tag) => (
+                              <span
+                                key={tag.id}
+                                className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+                              >
+                                {tag.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Date */}
+                        <div className="text-xs text-gray-500">
+                          Posted: {new Date(item.created_at).toLocaleDateString()}
                         </div>
                       </div>
-                      
-                      {/* Date */}
-                      <div className="text-xs text-gray-500">
-                        Posted: {new Date(item.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+            
+            {/* Loading trigger */}
+            {hasMore && (
+              <div ref={loadMoreRef} className="h-20 flex items-center justify-center mt-8">
+                <div className="text-gray-500">Loading more...</div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </main>
