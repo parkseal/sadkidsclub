@@ -301,7 +301,7 @@ function ResultsContent() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <main className="min-h-screen p-8" style={{ background: 'var(--background)' }}>
       <div className="max-w-6xl mx-auto">
         {/* Top Right Selection Pills */}
         <div className="flex justify-end items-center gap-2 mb-8">
@@ -331,7 +331,7 @@ function ResultsContent() {
                 const isExpanded = expandedCards.has(item.id)
                 
                 return (
-                  <div key={item.id} className="bg-white p-6 rounded-lg shadow break-inside-avoid relative">
+                  <div key={item.id} className="p-6 rounded-lg shadow break-inside-avoid relative" style={{ background: 'var(--dkgreen)', color: 'var(--foreground)' }}>
                     <ContentRenderer item={item} />
                     
                     {/* Expand/Collapse Button */}

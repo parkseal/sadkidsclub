@@ -3,9 +3,9 @@
 :root {
   --background: #3d3d3d;
   --foreground: #EADBD0;
-  --accent-gray: #666576;
-  --accent-green: #BDC390;
-  --accent-dkgreen: #3A4947;
+  --gray: #666576;
+  --ltgreen: #BDC390;
+  --dkgreen: #3A4947;
 }
 
 
@@ -14,4 +14,17 @@ body {
   color: var(--foreground);
   font-family: 'Courier New', Courier, monospace;
   font-size: 10px;
+}
+
+.grid button {
+    background: var(--background);
+    border: var(--gray);
+    font-size: 1.2em;
+    padding: 5px;
+}
+
+.text-button {
+  background: none;
+  font-weight: bold;
+  font-size: 1.2em;
 }

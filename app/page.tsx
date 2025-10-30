@@ -58,15 +58,18 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8"
-      style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}
-    >
-      <div className="max-w-2xl w-full">
-        <img src="../public/images/logo-skc.png" alt="sadkidsclub"></img>
+    <div className="min-h-screen flex items-center justify-center p-8 relative">
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.5,
+        }}
+      />
+      <div className="max-w-2xl w-full relative z-10">
+        <img src="/images/logo-skc.png" alt="sadkidsclub"></img>
         
         <div className="flex justify-center mb-8">
           <button
@@ -100,9 +103,9 @@ export default function HomePage() {
           <button
             onClick={handleSubmit}
             disabled={selected.size === 0}
-            className="w-full py-3 rounded-lg disabled:cursor-not-allowed transition-colors"
+            className={`text-button`}
           >
-            generate ({selected.size})
+            generate
           </button>
         </div>
       </div>
