@@ -6,6 +6,7 @@
   --gray: #666576;
   --ltgreen: #BDC390;
   --dkgreen: #3A4947;
+  --brown: #3F3221;
 }
 
 
@@ -21,6 +22,14 @@ body {
     border: var(--gray);
     font-size: 1.2em;
     padding: 5px;
+}
+
+.grid button:hover {
+    background: var(--gray);
+}
+
+.grid button:active {
+    background: var(--gray);
 }
 
 .text-button {

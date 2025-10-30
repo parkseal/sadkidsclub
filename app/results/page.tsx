@@ -33,7 +33,7 @@ function ContentRenderer({ item }: { item: ContentItem }) {
       return (
         <div className="border-l-4 border-gray-300 pl-4 italic">
           <p className="text-lg mb-2">"{item.content_data.quote}"</p>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm">
             — {item.content_data.source}
             {item.content_data.sourceUrl && (
               <>
@@ -42,7 +42,7 @@ function ContentRenderer({ item }: { item: ContentItem }) {
                   href={item.content_data.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline"
+                  className="hover:underline"
                 >
                   source
                 </a>
@@ -315,7 +315,7 @@ function ResultsContent() {
           {selectedTags.map((tag) => (
             <span
               key={tag.id}
-              className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full"
+              className="px-3 py-1 text-sm rounded-full"
             >
               {tag.name}
             </span>
@@ -331,13 +331,13 @@ function ResultsContent() {
                 const isExpanded = expandedCards.has(item.id)
                 
                 return (
-                  <div key={item.id} className="p-6 rounded-lg shadow break-inside-avoid relative" style={{ background: 'var(--dkgreen)', color: 'var(--foreground)' }}>
+                  <div key={item.id} className="p-6 rounded-lg shadow break-inside-avoid relative" style={{ background: 'var(--gray)', color: 'var(--foreground)' }}>
                     <ContentRenderer item={item} />
                     
                     {/* Expand/Collapse Button */}
                     <button
                       onClick={() => toggleExpand(item.id)}
-                      className="absolute bottom-4 right-4 text-sm text-blue-500 hover:text-blue-700"
+                      className="absolute bottom-4 right-4 text-sm"
                     >
                       {isExpanded ? '▲' : '▼'}
                     </button>
@@ -347,12 +347,12 @@ function ResultsContent() {
                       <div className="mt-6 pt-4 border-t border-gray-200">
                         {/* Tags Pills */}
                         <div className="mb-3">
-                          <p className="text-xs font-semibold text-gray-600 mb-2">Tags:</p>
+                          <p className="text-xs font-semibold mb-2">Tags:</p>
                           <div className="flex flex-wrap gap-2">
                             {item.tags?.map((tag) => (
                               <span
                                 key={tag.id}
-                                className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+                                className="px-2 py-1 text-xs rounded-full"
                               >
                                 {tag.name}
                               </span>
@@ -361,7 +361,7 @@ function ResultsContent() {
                         </div>
                         
                         {/* Date */}
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs">
                           Posted: {new Date(item.created_at).toLocaleDateString()}
                         </div>
                       </div>
@@ -374,7 +374,7 @@ function ResultsContent() {
             {/* Loading trigger */}
             {hasMore && (
               <div ref={loadMoreRef} className="h-20 flex items-center justify-center mt-8">
-                <div className="text-gray-500">Loading more...</div>
+                <div className="">loading...</div>
               </div>
             )}
           </>

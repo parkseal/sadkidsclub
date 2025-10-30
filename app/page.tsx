@@ -105,7 +105,9 @@ export default function HomePage() {
             disabled={selected.size === 0}
             className={`text-button`}
           >
-            generate
+            generate{Array.from({ length: selected.size }).map((_, i) => (
+              <span key={i}> ·</span>
+            ))}
           </button>
         </div>
       </div>
