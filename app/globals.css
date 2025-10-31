@@ -24,11 +24,12 @@ body {
     padding: 5px;
 }
 
-.grid button:hover {
-    background: var(--gray);
+.grid button.selected, .grid button:focus {
+    background: var(--ltgreen);
+    color: var(--dkgreen);
 }
 
-.grid button:focus {
+.grid button:hover {
     background: var(--gray);
 }
 

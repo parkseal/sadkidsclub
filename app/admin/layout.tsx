@@ -25,22 +25,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }
 
-  if (!isAuthed) {
+if (!isAuthed) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow">
-          <h1 className="text-2xl font-bold mb-4">Admin Login</h1>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="bg-black border border-white p-8 rounded-lg">
+          <h1 className="text-2xl font-bold mb-4 text-white">Admin Login</h1>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="w-full px-4 py-2 border rounded mb-4"
+            className="w-full px-4 py-2 border border-white bg-black text-white rounded mb-4"
             onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
           />
           <button
             onClick={handleLogin}
-            className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="w-full py-2 bg-white text-black rounded hover:bg-gray-300"
           >
             Login
           </button>

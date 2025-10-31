@@ -31,6 +31,7 @@ export default function AdminPage() {
   const [videoCaption, setVideoCaption] = useState('')
   
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     fetchTags()
@@ -185,7 +186,6 @@ export default function AdminPage() {
     
     alert('Content added successfully!')
     setTimeout(() => {
-      // Clear the alert by closing any open alert dialogs
       const alertElement = document.querySelector('[role="alert"]')
       if (alertElement) alertElement.remove()
     }, 100)

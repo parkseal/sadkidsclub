@@ -92,23 +92,26 @@ export default function HomePage() {
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
                 className={`p-4 rounded-lg border-2 transition-colors ${
-                  selected.has(tag.id)
-                }`}
+                  selected.has(tag.id) ? 'selected' : ''
+                }`} 
               >
-                {tag.name}
+                 {tag.name}
               </button>
             ))}
           </div>
 
+          <div className="flex justify-center">
+
           <button
             onClick={handleSubmit}
             disabled={selected.size === 0}
-            className={`text-button`}
+            className={`text-button animate-pulse`}
           >
             generate{Array.from({ length: selected.size }).map((_, i) => (
               <span key={i}> ·</span>
             ))}
           </button>
+          </div>
         </div>
       </div>
     </div>
