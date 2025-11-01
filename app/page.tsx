@@ -11,22 +11,32 @@ interface Tag {
   name: string
 }
 
-const BACKGROUND_IMAGES = [
-  'https://images.unsplash.com/photo-1590547889805-a71bf012603f',
-  'https://images.unsplash.com/photo-1608890457730-84fc54828b50',
-  'https://images.unsplash.com/photo-1730132348741-cb45165fe404'
-]
-
 export default function HomePage() {
   const [tags, setTags] = useState<Tag[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [showTags, setShowTags] = useState(false)
   const [bgImage, setBgImage] = useState('')
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    const randomImage = BACKGROUND_IMAGES[Math.floor(Math.random() * BACKGROUND_IMAGES.length)]
-    setBgImage(randomImage)
+    async function fetchBackground() {
+      const { data, error } = await supabase
+        .from('content_items')
+        .select('content_data, file_url')
+        .eq('content_type', 'image')
+        .eq('is_starred', true)
+      
+      if (data && data.length > 0) {
+        const randomImage = data[Math.floor(Math.random() * data.length)]
+        const imageUrl = randomImage.file_url || randomImage.content_data.imageUrl
+        setBgImage(imageUrl)
+      }
+      
+      setLoading(false)
+    }
+    
+    fetchBackground()
   }, [])
 
   useEffect(() => {
@@ -57,17 +67,27 @@ export default function HomePage() {
     router.push(`/results?tags=${tagIds}`)
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl">Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-8 relative">
-      <div 
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: 0.5,
-        }}
-      />
+      {bgImage && (
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.5,
+          }}
+        />
+      )}
       <div className="max-w-2xl w-full relative z-10">
         <img src="/images/logo-skc.png" alt="sadkidsclub"></img>
         
@@ -101,16 +121,15 @@ export default function HomePage() {
           </div>
 
           <div className="flex justify-center">
-
-          <button
-            onClick={handleSubmit}
-            disabled={selected.size === 0}
-            className={`text-button animate-pulse`}
-          >
-            generate{Array.from({ length: selected.size }).map((_, i) => (
-              <span key={i}> ·</span>
-            ))}
-          </button>
+            <button
+              onClick={handleSubmit}
+              disabled={selected.size === 0}
+              className={`text-button animate-pulse`}
+            >
+              generate{Array.from({ length: selected.size }).map((_, i) => (
+                <span key={i}> ·</span>
+              ))}
+            </button>
           </div>
         </div>
       </div>

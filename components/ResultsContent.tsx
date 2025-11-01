@@ -12,6 +12,7 @@ interface ContentItem {
   content_data: any
   file_url: string | null
   matchCount?: number 
+  is_starred?: boolean
 }
 
 export default function ResultsContent() {

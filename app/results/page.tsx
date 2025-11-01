@@ -17,6 +17,7 @@ interface ContentItem {
   matchCount?: number
   created_at: string 
   tags?: Array<{ id: string; name: string }>
+  is_starred?: boolean
 }
 
 interface Tag {
@@ -174,6 +175,7 @@ function EditModal({ item, allTags, onClose, onSave }: {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(
     new Set(item.tags?.map(t => t.id) || [])
   )
+  const [isStarred, setIsStarred] = useState(item.is_starred || false)
   
   // Content-type specific fields
   const [contentText, setContentText] = useState(item.content_data.text || '')
@@ -246,7 +248,8 @@ function EditModal({ item, allTags, onClose, onSave }: {
       .update({
         title,
         description,
-        content_data: contentData
+        content_data: contentData,
+        is_starred: isStarred
       })
       .eq('id', item.id)
 
@@ -443,7 +446,17 @@ function EditModal({ item, allTags, onClose, onSave }: {
               </div>
             </>
           )}
-
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isStarred}
+                  onChange={(e) => setIsStarred(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm font-semibold text-gray-700">⭐ Star this content (for backgrounds)</span>
+              </label>
+            </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Tags</label>
             <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">

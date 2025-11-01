@@ -29,6 +29,7 @@ export default function AdminPage() {
   const [videoCaption, setVideoCaption] = useState('')
   
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
+  const [isStarred, setIsStarred] = useState(false) 
 
   useEffect(() => {
     fetchTags()
@@ -152,7 +153,8 @@ export default function AdminPage() {
         title: contentTitle,
         description: '',
         content_type: contentType,
-        content_data: contentData
+        content_data: contentData,
+        is_starred: isStarred // Add this
       })
       .select()
       .single()
@@ -198,6 +200,7 @@ export default function AdminPage() {
     setVideoEmbedUrl('')
     setVideoCaption('')
     setSelectedTags(new Set())
+    setIsStarred(false)
   }
 
   const toggleTag = (id: string) => {
@@ -224,7 +227,17 @@ export default function AdminPage() {
         
         <section className="p-6 rounded-lg shadow">
           <h2 className="text-2xl font-bold mb-6">Add Content</h2>
-          
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isStarred}
+                onChange={(e) => setIsStarred(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <span className="font-semibold">⭐</span>
+            </label>
+          </div>
           <div className="space-y-4">
             <div>
               <p className="font-semibold mb-3">Content Type:</p>
