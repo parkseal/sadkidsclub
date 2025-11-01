@@ -19,93 +19,468 @@ interface ContentItem {
   tags?: Array<{ id: string; name: string }>
 }
 
-function ContentRenderer({ item }: { item: ContentItem }) {
-  switch (item.content_type) {
-    case 'text':
-      return (
-        <div 
-          className="prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: item.content_data.text }}
-        />
-      )
-    
-    case 'quote':
-      return (
-        <div className="border-l-4 border-gray-300 pl-4 italic">
-          <p className="text-lg mb-2">"{item.content_data.quote}"</p>
-          <div className="text-sm">
-            — {item.content_data.source}
-            {item.content_data.sourceUrl && (
-              <>
-                {' '}(
-                <a 
-                  href={item.content_data.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:underline"
-                >
-                  source
-                </a>
-                )
-              </>
+interface Tag {
+  id: string
+  name: string
+}
+
+function ContentRenderer({ item, onClick }: { item: ContentItem; onClick?: () => void }) {
+  const content = (() => {
+    switch (item.content_type) {
+      case 'text':
+        return (
+          <div 
+            className="prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: item.content_data.text }}
+          />
+        )
+      
+      case 'quote':
+        return (
+          <div className="border-l-4 border-gray-300 pl-4 italic">
+            <p className="text-lg mb-2">"{item.content_data.quote}"</p>
+            <div className="text-sm">
+              — {item.content_data.source}
+              {item.content_data.sourceUrl && (
+                <>
+                  {' '}(
+                  <a 
+                    href={item.content_data.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    source
+                  </a>
+                  )
+                </>
+              )}
+            </div>
+          </div>
+        )
+      
+      case 'link':
+        return (
+          <a 
+            href={item.content_data.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {item.title} →
+          </a>
+        )
+      
+      case 'image':
+        return (
+          <div>
+            <img 
+              src={item.file_url || item.content_data.imageUrl} 
+              alt={item.title}
+              className="w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+            />
+            {item.content_data.caption && (
+              <div 
+                className="text-sm text-gray-600 mt-2 italic"
+                dangerouslySetInnerHTML={{ __html: item.content_data.caption }}
+              />
             )}
           </div>
+        )
+      
+      case 'video':
+        const embedUrl = item.content_data.embedUrl;
+        const isDirectVideo = embedUrl.match(/\.(mp4|webm|ogg)$/i) || 
+                              (!embedUrl.includes('youtube.com') && 
+                              !embedUrl.includes('vimeo.com') && 
+                              embedUrl.startsWith('http'));
+        
+        return (
+          <div>
+            <div className="aspect-video">
+              {isDirectVideo && embedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+                <video 
+                  controls 
+                  className="w-full h-full rounded-lg"
+                  src={embedUrl}
+                />
+              ) : (
+                <iframe
+                  src={embedUrl}
+                  title={item.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full rounded-lg"
+                />
+              )}
+            </div>
+            {item.content_data.caption && (
+              <div 
+                className="text-sm text-gray-600 mt-2 italic"
+                dangerouslySetInnerHTML={{ __html: item.content_data.caption }}
+              />
+            )}
+          </div>
+        )
+      
+      default:
+        return <p className="text-gray-500">Unsupported content type</p>
+    }
+  })()
+
+  return <div onClick={onClick} className={onClick ? 'cursor-pointer' : ''}>{content}</div>
+}
+
+function FullscreenModal({ item, onClose }: { item: ContentItem; onClose: () => void }) {
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [onClose])
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300 z-10"
+      >
+        ✕
+      </button>
+      <div 
+        className="max-w-7xl w-full max-h-[90vh] overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ContentRenderer item={item} />
+      </div>
+    </div>
+  )
+}
+
+function EditModal({ item, allTags, onClose, onSave }: { 
+  item: ContentItem
+  allTags: Tag[]
+  onClose: () => void
+  onSave: (updated: ContentItem) => void
+}) {
+  const [title, setTitle] = useState(item.title)
+  const [description, setDescription] = useState(item.description)
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(
+    new Set(item.tags?.map(t => t.id) || [])
+  )
+  
+  // Content-type specific fields
+  const [contentText, setContentText] = useState(item.content_data.text || '')
+  const [quote, setQuote] = useState(item.content_data.quote || '')
+  const [quoteSource, setQuoteSource] = useState(item.content_data.source || '')
+  const [quoteSourceUrl, setQuoteSourceUrl] = useState(item.content_data.sourceUrl || '')
+  const [linkUrl, setLinkUrl] = useState(item.content_data.url || '')
+  const [imageUrl, setImageUrl] = useState(item.content_data.imageUrl || '')
+  const [imageCaption, setImageCaption] = useState(item.content_data.caption || '')
+  const [videoEmbedUrl, setVideoEmbedUrl] = useState(item.content_data.embedUrl || '')
+  const [videoCaption, setVideoCaption] = useState(item.content_data.caption || '')
+
+  const toggleTag = (id: string) => {
+    const newSet = new Set(selectedTags)
+    if (newSet.has(id)) {
+      newSet.delete(id)
+    } else {
+      newSet.add(id)
+    }
+    setSelectedTags(newSet)
+  }
+
+  const handleSave = async () => {
+    if (!title.trim() || selectedTags.size === 0) {
+      alert('Title and at least one tag required')
+      return
+    }
+
+    let contentData: any = {}
+    
+    switch (item.content_type) {
+      case 'text':
+        contentData = { text: contentText }
+        break
+      case 'quote':
+        contentData = { 
+          quote, 
+          source: quoteSource,
+          ...(quoteSourceUrl && { sourceUrl: quoteSourceUrl })
+        }
+        break
+      case 'link':
+        contentData = { url: linkUrl }
+        break
+      case 'image':
+        contentData = { 
+          imageUrl,
+          ...(imageCaption && { caption: imageCaption })
+        }
+        break
+      case 'video':
+        let embedUrl = videoEmbedUrl
+        if (videoEmbedUrl.includes('youtube.com/watch')) {
+          const videoId = new URL(videoEmbedUrl).searchParams.get('v')
+          embedUrl = `https://www.youtube.com/embed/${videoId}`
+        } else if (videoEmbedUrl.includes('youtu.be/')) {
+          const videoId = videoEmbedUrl.split('youtu.be/')[1].split('?')[0]
+          embedUrl = `https://www.youtube.com/embed/${videoId}`
+        }
+        contentData = { 
+          embedUrl,
+          ...(videoCaption && { caption: videoCaption })
+        }
+        break
+    }
+
+    // Update content item
+    const { error: updateError } = await supabase
+      .from('content_items')
+      .update({
+        title,
+        description,
+        content_data: contentData
+      })
+      .eq('id', item.id)
+
+    if (updateError) {
+      alert('Error updating content: ' + updateError.message)
+      return
+    }
+
+    // Delete old tag associations
+    await supabase
+      .from('content_tags')
+      .delete()
+      .eq('content_id', item.id)
+
+    // Insert new tag associations
+    const tagLinks = Array.from(selectedTags).map(tagId => ({
+      content_id: item.id,
+      tag_id: tagId
+    }))
+
+    const { error: linkError } = await supabase
+      .from('content_tags')
+      .insert(tagLinks)
+
+    if (linkError) {
+      alert('Error updating tags: ' + linkError.message)
+      return
+    }
+
+    // Get updated tag names
+    const { data: tagsData } = await supabase
+      .from('tags')
+      .select('*')
+      .in('id', Array.from(selectedTags))
+
+    const updatedItem = {
+      ...item,
+      title,
+      description,
+      content_data: contentData,
+      tags: tagsData || []
+    }
+
+    onSave(updatedItem)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [onClose])
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-gray-800">Edit Content</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-600 hover:text-gray-800 text-2xl"
+          >
+            ✕
+          </button>
         </div>
-      )
-    
-    case 'link':
-      return (
-        <a 
-          href={item.content_data.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          {item.title} →
-        </a>
-      )
-    
-    case 'image':
-      return (
-        <div>
-          <img 
-            src={item.file_url || item.content_data.imageUrl} 
-            alt={item.title}
-            className="w-full h-auto rounded-lg"
-          />
-          {item.content_data.caption && (
-            <div 
-              className="text-sm text-gray-600 mt-2 italic"
-              dangerouslySetInnerHTML={{ __html: item.content_data.caption }}
-            />
-          )}
-        </div>
-      )
-    
-    case 'video':
-      return (
-        <div>
-          <div className="aspect-video">
-            <iframe
-              src={item.content_data.embedUrl}
-              title={item.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full rounded-lg"
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-4 py-2 border rounded text-gray-800"
             />
           </div>
-          {item.content_data.caption && (
-            <div 
-              className="text-sm text-gray-600 mt-2 italic"
-              dangerouslySetInnerHTML={{ __html: item.content_data.caption }}
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-4 py-2 border rounded text-gray-800"
             />
+          </div>
+
+          {item.content_type === 'text' && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Content</label>
+              <textarea
+                value={contentText}
+                onChange={(e) => setContentText(e.target.value)}
+                rows={6}
+                className="w-full px-4 py-2 border rounded text-gray-800"
+              />
+            </div>
           )}
+
+          {item.content_type === 'quote' && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Quote</label>
+                <textarea
+                  value={quote}
+                  onChange={(e) => setQuote(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-2 border rounded text-gray-800"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Source</label>
+                <input
+                  type="text"
+                  value={quoteSource}
+                  onChange={(e) => setQuoteSource(e.target.value)}
+                  className="w-full px-4 py-2 border rounded text-gray-800"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Source URL (optional)</label>
+                <input
+                  type="url"
+                  value={quoteSourceUrl}
+                  onChange={(e) => setQuoteSourceUrl(e.target.value)}
+                  className="w-full px-4 py-2 border rounded text-gray-800"
+                />
+              </div>
+            </>
+          )}
+
+          {item.content_type === 'link' && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">URL</label>
+              <input
+                type="url"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                className="w-full px-4 py-2 border rounded text-gray-800"
+              />
+            </div>
+          )}
+
+          {item.content_type === 'image' && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Image URL</label>
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  className="w-full px-4 py-2 border rounded text-gray-800"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Caption (optional)</label>
+                <input
+                  type="text"
+                  value={imageCaption}
+                  onChange={(e) => setImageCaption(e.target.value)}
+                  className="w-full px-4 py-2 border rounded text-gray-800"
+                />
+              </div>
+            </>
+          )}
+
+          {item.content_type === 'video' && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Video URL</label>
+                <input
+                  type="url"
+                  value={videoEmbedUrl}
+                  onChange={(e) => setVideoEmbedUrl(e.target.value)}
+                  className="w-full px-4 py-2 border rounded text-gray-800"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Caption (optional)</label>
+                <input
+                  type="text"
+                  value={videoCaption}
+                  onChange={(e) => setVideoCaption(e.target.value)}
+                  className="w-full px-4 py-2 border rounded text-gray-800"
+                />
+              </div>
+            </>
+          )}
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Tags</label>
+            <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+              {allTags.map((tag) => (
+                <button
+                  key={tag.id}
+                  onClick={() => toggleTag(tag.id)}
+                  className={`p-2 rounded border-2 text-sm transition-colors ${
+                    selectedTags.has(tag.id)
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                  }`}
+                >
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <button
+              onClick={handleSave}
+              className="flex-1 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 font-semibold transition-colors"
+            >
+              Save Changes
+            </button>
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-      )
-    
-    default:
-      return <p className="text-gray-500">Unsupported content type</p>
-  }
+      </div>
+    </div>
+  )
 }
 
 export default function ResultsPage() {
@@ -123,7 +498,10 @@ function ResultsContent() {
   const [loading, setLoading] = useState(true)
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
   const [selectedTags, setSelectedTags] = useState<Array<{ id: string; name: string }>>([])
+  const [allTags, setAllTags] = useState<Tag[]>([])
   const [hasMore, setHasMore] = useState(true)
+  const [fullscreenItem, setFullscreenItem] = useState<ContentItem | null>(null)
+  const [editingItem, setEditingItem] = useState<ContentItem | null>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -139,7 +517,6 @@ function ResultsContent() {
     setExpandedCards(newSet)
   }
 
-  // Shuffle array using Fisher-Yates algorithm
   const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array]
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -148,6 +525,44 @@ function ResultsContent() {
     }
     return shuffled
   }
+
+  const deleteContent = async (id: string) => {
+    if (!confirm('Delete this content?')) return
+    
+    const { error } = await supabase
+      .from('content_items')
+      .delete()
+      .eq('id', id)
+    
+    if (error) {
+      alert('Error deleting content: ' + error.message)
+      return
+    }
+    
+    setAllContent(prev => prev.filter(item => item.id !== id))
+    setDisplayedContent(prev => prev.filter(item => item.id !== id))
+  }
+
+  const handleSaveEdit = (updatedItem: ContentItem) => {
+    setAllContent(prev => prev.map(item => 
+      item.id === updatedItem.id ? updatedItem : item
+    ))
+    setDisplayedContent(prev => prev.map(item => 
+      item.id === updatedItem.id ? updatedItem : item
+    ))
+  }
+
+  useEffect(() => {
+    async function fetchTags() {
+      const { data } = await supabase
+        .from('tags')
+        .select('*')
+        .order('name')
+      
+      if (data) setAllTags(data)
+    }
+    fetchTags()
+  }, [])
 
   useEffect(() => {
     async function fetchContent() {
@@ -158,7 +573,6 @@ function ResultsContent() {
         return
       }
 
-      // Fetch the selected tags names
       const { data: tagsData } = await supabase
         .from('tags')
         .select('*')
@@ -168,7 +582,6 @@ function ResultsContent() {
         setSelectedTags(tagsData)
       }
 
-      // Use the simpler query approach
       const { data, error } = await supabase
         .from('content_tags')
         .select(`
@@ -185,7 +598,6 @@ function ResultsContent() {
       }
 
       if (data && data.length > 0) {
-        // Group by content item
         const contentMap = new Map()
         
         data.forEach((row: any) => {
@@ -217,17 +629,14 @@ function ResultsContent() {
           }
         })
         
-        // Convert map to array
         const contentArray = Array.from(contentMap.values())
         
-        // Calculate match counts
         contentArray.forEach(item => {
           item.matchCount = item.tags.filter((k: any) => 
             tagIds.includes(k.id)
           ).length
         })
         
-        // Group by match count
         const weightBands = new Map<number, ContentItem[]>()
         contentArray.forEach(item => {
           const count = item.matchCount || 0
@@ -237,7 +646,6 @@ function ResultsContent() {
           weightBands.get(count)!.push(item)
         })
         
-        // Shuffle within each weight band and combine
         const sortedWeights = Array.from(weightBands.keys()).sort((a, b) => b - a)
         const shuffledContent: ContentItem[] = []
         sortedWeights.forEach(weight => {
@@ -303,14 +711,9 @@ function ResultsContent() {
   return (
     <main className="min-h-screen p-8" style={{ background: 'var(--background)' }}>
       <div className="max-w-6xl mx-auto">
-        {/* Top Right Selection Pills */}
         <div className="flex justify-end items-center gap-2 mb-8">
-          
           {selectedTags.map((tag) => (
-            <span
-              key={tag.id}
-              className="px-3 py-1 text-sm rounded-full"
-            >
+            <span key={tag.id} className="px-3 py-1 text-sm rounded-full">
               {tag.name}
             </span>
           ))}
@@ -333,9 +736,11 @@ function ResultsContent() {
                 
                 return (
                   <div key={item.id} className="p-6 rounded-lg shadow break-inside-avoid relative" style={{ background: 'var(--gray)', color: 'var(--foreground)' }}>
-                    <ContentRenderer item={item} />
+                    <ContentRenderer 
+                      item={item} 
+                      onClick={() => setFullscreenItem(item)}
+                    />
                     
-                    {/* Expand/Collapse Button */}
                     <button
                       onClick={() => toggleExpand(item.id)}
                       className="absolute bottom-4 right-4 text-sm"
@@ -343,27 +748,42 @@ function ResultsContent() {
                       {isExpanded ? '▲' : '▼'}
                     </button>
                     
-                    {/* Expanded Metadata */}
                     {isExpanded && (
                       <div className="mt-6 pt-4 border-t border-gray-200">
-                        {/* Tags Pills */}
                         <div className="mb-3">
                           <p className="text-xs font-semibold mb-2">Tags:</p>
                           <div className="flex flex-wrap gap-2">
                             {item.tags?.map((tag) => (
-                              <span
-                                key={tag.id}
-                                className="px-2 py-1 text-xs rounded-full"
-                              >
+                              <span key={tag.id} className="px-2 py-1 text-xs rounded-full">
                                 {tag.name}
                               </span>
                             ))}
                           </div>
                         </div>
                         
-                        {/* Date */}
-                        <div className="text-xs">
+                        <div className="text-xs mb-3">
                           Posted: {new Date(item.created_at).toLocaleDateString()}
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setEditingItem(item)
+                            }}
+                            className="text-xs text-blue-400 hover:text-blue-600 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              deleteContent(item.id)
+                            }}
+                            className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </div>
                     )}
@@ -372,7 +792,6 @@ function ResultsContent() {
               })}
             </div>
             
-            {/* Loading trigger */}
             {hasMore && (
               <div ref={loadMoreRef} className="h-20 flex items-center justify-center mt-8">
                 <div className="">loading...</div>
@@ -381,6 +800,22 @@ function ResultsContent() {
           </>
         )}
       </div>
+
+      {fullscreenItem && (
+        <FullscreenModal 
+          item={fullscreenItem} 
+          onClose={() => setFullscreenItem(null)} 
+        />
+      )}
+
+      {editingItem && (
+        <EditModal
+          item={editingItem}
+          allTags={allTags}
+          onClose={() => setEditingItem(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
     </main>
   )
 }

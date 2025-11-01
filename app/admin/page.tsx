@@ -15,11 +15,9 @@ export default function AdminPage() {
   const [tags, setTags] = useState<Tag[]>([])
   const [newTag, setNewTag] = useState('')
   
-  // Content form fields
   const [contentTitle, setContentTitle] = useState('')
   const [contentType, setContentType] = useState<'text' | 'quote' | 'link' | 'image' | 'video'>('text')
   
-  // Type-specific fields
   const [contentText, setContentText] = useState('')
   const [quote, setQuote] = useState('')
   const [quoteSource, setQuoteSource] = useState('')
@@ -31,7 +29,6 @@ export default function AdminPage() {
   const [videoCaption, setVideoCaption] = useState('')
   
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
-  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     fetchTags()
@@ -41,7 +38,6 @@ export default function AdminPage() {
     const { data: tagsData } = await supabase.from('tags').select('*').order('name')
     
     if (tagsData) {
-      // Fetch content counts for each tag
       const { data: countsData } = await supabase
         .from('content_tags')
         .select('tag_id')
@@ -180,7 +176,6 @@ export default function AdminPage() {
       return
     }
 
-    
     resetForm()
     fetchTags()
     
@@ -227,12 +222,10 @@ export default function AdminPage() {
     <div className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto space-y-12">
         
-        {/* Add Content Section - Now First */}
         <section className="p-6 rounded-lg shadow">
           <h2 className="text-2xl font-bold mb-6">Add Content</h2>
           
           <div className="space-y-4">
-            {/* Content Type Buttons - Now First */}
             <div>
               <p className="font-semibold mb-3">Content Type:</p>
               <div className="flex gap-2 flex-wrap">
@@ -260,7 +253,6 @@ export default function AdminPage() {
               className="w-full px-4 py-2 border rounded"
             />
 
-            {/* Text fields */}
             {contentType === 'text' && (
               <>
                 <textarea
@@ -276,7 +268,6 @@ export default function AdminPage() {
               </>
             )}
 
-            {/* Quote fields */}
             {contentType === 'quote' && (
               <>
                 <textarea
@@ -303,7 +294,6 @@ export default function AdminPage() {
               </>
             )}
 
-            {/* Link fields */}
             {contentType === 'link' && (
               <input
                 type="url"
@@ -314,7 +304,6 @@ export default function AdminPage() {
               />
             )}
 
-            {/* Image fields */}
             {contentType === 'image' && (
               <>
                 <input
@@ -337,7 +326,6 @@ export default function AdminPage() {
               </>
             )}
 
-            {/* Video fields */}
             {contentType === 'video' && (
               <>
                 <input
@@ -367,10 +355,10 @@ export default function AdminPage() {
                   <button
                     key={k.id}
                     onClick={() => toggleTag(k.id)}
-                    className={`p-2 rounded border-2 text-sm ${
+                    className={`p-2 rounded border-2 text-sm transition-colors ${
                       selectedTags.has(k.id)
                         ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200'
+                        : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     {k.name}
@@ -381,14 +369,13 @@ export default function AdminPage() {
 
             <button
               onClick={addContent}
-              className="w-full py-3 bg-green-500 text-white rounded hover:bg-green-600 font-semibold"
+              className="w-full py-3 bg-green-500 text-white rounded hover:bg-green-600 font-semibold transition-colors"
             >
               Add Content
             </button>
           </div>
         </section>
 
-        {/* Tags Section - Now Second */}
         <section className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-2xl font-bold mb-4">Manage Tags</h2>
           
@@ -403,7 +390,7 @@ export default function AdminPage() {
             />
             <button
               onClick={addTag}
-              className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
             >
               Add
             </button>
@@ -420,7 +407,7 @@ export default function AdminPage() {
                 </div>
                 <button
                   onClick={() => deleteTag(k.id)}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-red-500 hover:text-red-700 transition-colors"
                 >
                   Delete
                 </button>
