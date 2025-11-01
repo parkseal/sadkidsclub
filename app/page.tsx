@@ -89,7 +89,7 @@ export default function HomePage() {
         <div className="flex justify-center mb-8">
           <button
             onClick={() => setShowTags(!showTags)}
-            className="text-6xl hover:scale-110 transition-transform cursor-pointer"
+            className="hover:invert transition-transform"
             aria-label="Toggle tag selection"
           >
             💭
@@ -121,9 +121,7 @@ export default function HomePage() {
               disabled={selected.size === 0}
               className="text-button animate-pulse"
             >
-              generate{Array.from({ length: selected.size }).map((_, i) => (
-                <span key={i}> ·</span>
-              ))}
+              generate
             </button>
           </div>
         </div>

@@ -43,6 +43,16 @@ body {
 
 /* Logos */
 .longlogo {
-  width: 40%;
-  min-width: 200px;
+  width: 50%;
+  min-width: 400px;
+}
+
+.longlogo img {
+  width: 60%;
+  max-width: 300px;;
+}
+
+button.text-button.animate-pulse {
+    background: black;
+    padding: 5px 15px;
 }
