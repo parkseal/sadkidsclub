@@ -79,17 +79,12 @@ export default function HomePage() {
     <div className="min-h-screen flex items-center justify-center p-8 relative">
       {bgImage && (
         <div 
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: `url(${bgImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: 0.5,
-          }}
+          className="absolute inset-0 z-0 bg-cover bg-center opacity-50"
+          style={{ backgroundImage: `url(${bgImage})` }}
         />
       )}
-      <div className="max-w-2xl w-full relative z-10">
-        <img src="/images/logo-skc.png" alt="sadkidsclub"></img>
+      <div className="max-w-2xl w-full relative z-10 longlogo">
+        <img src="/images/logo-skc.png" alt="sadkidsclub" />
         
         <div className="flex justify-center mb-8">
           <button
@@ -124,7 +119,7 @@ export default function HomePage() {
             <button
               onClick={handleSubmit}
               disabled={selected.size === 0}
-              className={`text-button animate-pulse`}
+              className="text-button animate-pulse"
             >
               generate{Array.from({ length: selected.size }).map((_, i) => (
                 <span key={i}> ·</span>
