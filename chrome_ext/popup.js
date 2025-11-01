@@ -29,17 +29,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function captureCurrentPage(tab) {
   const url = tab.url;
   
-  // Try to extract video from page
-  const videoUrl = await extractVideoFromPage(tab);
-  
-  if (videoUrl) {
-    pendingContent = {
-      type: 'video',
-      url: videoUrl,
-      pageUrl: url,
-      title: tab.title
-    };
-  } else if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+  // Detect if it's a video page
+  if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
     pendingContent = {
       type: 'video',
       url: url,

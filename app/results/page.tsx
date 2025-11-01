@@ -90,40 +90,40 @@ function ContentRenderer({ item, onClick }: { item: ContentItem; onClick?: () =>
           </div>
         )
       
-      case 'video':
-        const embedUrl = item.content_data.embedUrl;
-        const isDirectVideo = embedUrl.match(/\.(mp4|webm|ogg)$/i) || 
-                              (!embedUrl.includes('youtube.com') && 
-                              !embedUrl.includes('vimeo.com') && 
-                              embedUrl.startsWith('http'));
-        
-        return (
-          <div>
-            <div className="aspect-video">
-              {isDirectVideo && embedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
-                <video 
-                  controls 
-                  className="w-full h-full rounded-lg"
-                  src={embedUrl}
-                />
-              ) : (
-                <iframe
-                  src={embedUrl}
-                  title={item.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full rounded-lg"
+        case 'video':
+          const embedUrl = item.content_data.embedUrl;
+          const isDirectVideo = embedUrl.match(/\.(mp4|webm|ogg)$/i) || 
+                                (!embedUrl.includes('youtube.com') && 
+                                !embedUrl.includes('vimeo.com') && 
+                                embedUrl.startsWith('http'));
+          
+          return (
+            <div>
+              <div className="aspect-video">
+                {isDirectVideo && embedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+                  <video 
+                    controls 
+                    className="w-full h-full rounded-lg"
+                    src={embedUrl}
+                  />
+                ) : (
+                  <iframe
+                    src={embedUrl}
+                    title={item.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full rounded-lg"
+                  />
+                )}
+              </div>
+              {item.content_data.caption && (
+                <div 
+                  className="text-sm text-gray-600 mt-2 italic"
+                  dangerouslySetInnerHTML={{ __html: item.content_data.caption }}
                 />
               )}
             </div>
-            {item.content_data.caption && (
-              <div 
-                className="text-sm text-gray-600 mt-2 italic"
-                dangerouslySetInnerHTML={{ __html: item.content_data.caption }}
-              />
-            )}
-          </div>
-        )
+          )
       
       default:
         return <p className="text-gray-500">Unsupported content type</p>
