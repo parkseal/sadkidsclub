@@ -14,6 +14,8 @@ interface Tag {
 export default function AdminPage() {
   const [tags, setTags] = useState<Tag[]>([])
   const [newTag, setNewTag] = useState('')
+  const [editingTag, setEditingTag] = useState<Tag | null>(null)
+  const [editTagName, setEditTagName] = useState('')
   
   const [contentTitle, setContentTitle] = useState('')
   const [contentType, setContentType] = useState<'text' | 'quote' | 'link' | 'image' | 'video'>('text')
@@ -69,6 +71,28 @@ export default function AdminPage() {
       fetchTags()
     } else {
       alert('Error adding tag: ' + error.message)
+    }
+  }
+
+  async function startEditTag(tag: Tag) {
+    setEditingTag(tag)
+    setEditTagName(tag.name)
+  }
+
+  async function saveEditTag() {
+    if (!editingTag || !editTagName.trim()) return
+    
+    const { error } = await supabase
+      .from('tags')
+      .update({ name: editTagName.toLowerCase().trim() })
+      .eq('id', editingTag.id)
+    
+    if (!error) {
+      setEditingTag(null)
+      setEditTagName('')
+      fetchTags()
+    } else {
+      alert('Error updating tag: ' + error.message)
     }
   }
 
@@ -154,7 +178,7 @@ export default function AdminPage() {
         description: '',
         content_type: contentType,
         content_data: contentData,
-        is_starred: isStarred // Add this
+        is_starred: isStarred
       })
       .select()
       .single()
@@ -389,7 +413,7 @@ export default function AdminPage() {
           </div>
         </section>
 
-        <section className="bg-white p-6 rounded-lg shadow">
+        <section className="p-6 rounded-lg shadow">
           <h2 className="text-2xl font-bold mb-4">Manage Tags</h2>
           
           <div className="flex gap-2 mb-4">
@@ -412,18 +436,53 @@ export default function AdminPage() {
           <div className="space-y-2">
             {tags.map((k: Tag) => (
               <div key={k.id} className="flex justify-between items-center p-2 border rounded">
-                <div className="flex items-center gap-3">
-                  <span>{k.name}</span>
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    {k.contentCount || 0}
-                  </span>
-                </div>
-                <button
-                  onClick={() => deleteTag(k.id)}
-                  className="text-red-500 hover:text-red-700 transition-colors"
-                >
-                  Delete
-                </button>
+                {editingTag?.id === k.id ? (
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="text"
+                      value={editTagName}
+                      onChange={(e) => setEditTagName(e.target.value)}
+                      className="flex-1 px-2 py-1 border rounded"
+                      onKeyPress={(e) => e.key === 'Enter' && saveEditTag()}
+                      autoFocus
+                    />
+                    <button
+                      onClick={saveEditTag}
+                      className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingTag(null)}
+                      className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <span>{k.name}</span>
+                      <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                        {k.contentCount || 0}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => startEditTag(k)}
+                        className="text-blue-500 hover:text-blue-700 transition-colors text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteTag(k.id)}
+                        className="text-red-500 hover:text-red-700 transition-colors text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>

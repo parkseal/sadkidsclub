@@ -114,12 +114,21 @@ function renderPreview() {
       captionGroup.querySelector('label').textContent = 'Caption (optional, HTML supported)';
       break;
       
-    case 'text':
+    case 'quote':
       preview.innerHTML = `
-        <strong>Selected text:</strong><br>
-        ${pendingContent.text.substring(0, 200)}${pendingContent.text.length > 200 ? '...' : ''}
+        <strong>Quote:</strong><br>
+        "${pendingContent.quote.substring(0, 200)}${pendingContent.quote.length > 200 ? '...' : ''}"
       `;
       captionGroup.style.display = 'none';
+      // Show quote-specific fields
+      document.getElementById('quoteFields').style.display = 'block';
+      // Pre-fill source with page title
+      if (pendingContent.pageTitle) {
+        document.getElementById('source').value = pendingContent.pageTitle;
+      }
+      if (pendingContent.pageUrl) {
+        document.getElementById('sourceUrl').value = pendingContent.pageUrl;
+      }
       break;
       
     case 'video':
@@ -194,14 +203,26 @@ async function handleSubmit() {
   let contentType = pendingContent.type;
   
   switch (pendingContent.type) {
-    case 'text':
-      contentData = { text: pendingContent.text };
-      break;
-      
     case 'image':
       contentData = { 
         imageUrl: pendingContent.url,
         ...(caption && { caption })
+      };
+      break;
+      
+    case 'quote':
+      const source = document.getElementById('source').value.trim();
+      const sourceUrl = document.getElementById('sourceUrl').value.trim();
+      
+      if (!source) {
+        error.textContent = 'Source is required for quotes';
+        return;
+      }
+      
+      contentData = { 
+        quote: pendingContent.quote,
+        source: source,
+        ...(sourceUrl && { sourceUrl })
       };
       break;
       
@@ -217,8 +238,6 @@ async function handleSubmit() {
         const videoId = embedUrl.split('youtu.be/')[1].split('?')[0];
         embedUrl = `https://www.youtube.com/embed/${videoId}`;
       }
-      // For Pinterest, Vimeo, TikTok, Instagram - keep the URL as-is if it's already an embed
-      // Otherwise store the direct video URL
       
       contentData = { 
         embedUrl,

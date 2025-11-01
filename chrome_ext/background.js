@@ -7,7 +7,7 @@ chrome.runtime.onInstalled.addListener(() => {
   });
   
   chrome.contextMenus.create({
-    id: "saveText",
+    id: "saveQuote",
     title: "Save to sadkidsclub",
     contexts: ["selection"]
   });
@@ -23,11 +23,12 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       url: info.srcUrl,
       pageUrl: info.pageUrl
     };
-  } else if (info.menuItemId === "saveText") {
+  } else if (info.menuItemId === "saveQuote") {
     contentData = {
-      type: "text",
-      text: info.selectionText,
-      pageUrl: info.pageUrl
+      type: "quote",
+      quote: info.selectionText,
+      pageUrl: info.pageUrl,
+      pageTitle: tab.title
     };
   }
   

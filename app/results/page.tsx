@@ -518,7 +518,9 @@ function ResultsContent() {
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
-  const ITEMS_PER_LOAD = 9
+  const ITEMS_PER_LOAD = 10
+  const ITEMS_PER_PAGE = 30
+  const [currentPage, setCurrentPage] = useState(1)
 
   const toggleExpand = (id: string) => {
     const newSet = new Set(expandedCards)
@@ -684,15 +686,16 @@ function ResultsContent() {
     if (!hasMore || loading) return
     
     const currentLength = displayedContent.length
-    const nextBatch = allContent.slice(currentLength, currentLength + ITEMS_PER_LOAD)
+    const pageMax = currentPage * ITEMS_PER_PAGE
+    const nextBatch = allContent.slice(currentLength, Math.min(currentLength + ITEMS_PER_LOAD, pageMax))
     
     if (nextBatch.length > 0) {
       setDisplayedContent(prev => [...prev, ...nextBatch])
-      setHasMore(currentLength + nextBatch.length < allContent.length)
+      setHasMore(currentLength + nextBatch.length < pageMax && currentLength + nextBatch.length < allContent.length)
     } else {
       setHasMore(false)
     }
-  }, [allContent, displayedContent, hasMore, loading])
+  }, [allContent, displayedContent, hasMore, loading, currentPage])
 
   useEffect(() => {
     if (loading || !hasMore) return
@@ -724,19 +727,24 @@ function ResultsContent() {
   return (
     <main className="min-h-screen p-8" style={{ background: 'var(--background)' }}>
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-end items-center gap-2 mb-8">
-          {selectedTags.map((tag) => (
-            <span key={tag.id} className="px-3 py-1 text-sm rounded-full">
-              {tag.name}
-            </span>
-          ))}
-          <Link 
-            href="/" 
-            className="w-8 h-8 rounded-full hover:bg-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
-            aria-label="Back to selection"
-          >
-            ✕
-          </Link>
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex gap-2">
+            {selectedTags.map((tag) => (
+              <span key={tag.id} className="px-3 py-1 text-sm rounded-full">
+                {tag.name}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm">Page {currentPage}</span>
+            <Link 
+              href="/" 
+              className="w-8 h-8 rounded-full hover:bg-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
+              aria-label="Back to selection"
+            >
+              ✕
+            </Link>
+          </div>
         </div>
 
         {allContent.length === 0 ? (
@@ -807,7 +815,27 @@ function ResultsContent() {
             
             {hasMore && (
               <div ref={loadMoreRef} className="h-20 flex items-center justify-center mt-8">
-                <div className="">loading...</div>
+                <div>loading...</div>
+              </div>
+            )}
+
+            {!hasMore && currentPage * ITEMS_PER_PAGE < allContent.length && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => {
+                    const nextPage = currentPage + 1
+                    setCurrentPage(nextPage)
+                    const pageStart = (nextPage - 1) * ITEMS_PER_PAGE
+                    const pageEnd = Math.min(nextPage * ITEMS_PER_PAGE, allContent.length)
+                    const nextBatch = allContent.slice(pageStart, Math.min(pageStart + ITEMS_PER_LOAD, pageEnd))
+                    setDisplayedContent(nextBatch)
+                    setHasMore(nextBatch.length < pageEnd - pageStart)
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold"
+                >
+                  Next Page ({currentPage + 1})
+                </button>
               </div>
             )}
           </>

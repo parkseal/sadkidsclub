@@ -76,7 +76,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 relative">
+    <div className="min-h-screen flex flex-col items-center justify-start p-8 pt-32 relative">
       {bgImage && (
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center opacity-50"
@@ -89,7 +89,7 @@ export default function HomePage() {
         <div className="flex justify-center mb-8">
           <button
             onClick={() => setShowTags(!showTags)}
-            className="hover:invert transition-transform"
+            className="text-3xl hover:invert transition-transform"
             aria-label="Toggle tag selection"
           >
             💭
