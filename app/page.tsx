@@ -26,10 +26,12 @@ export default function HomePage() {
         .select('content_data, file_url')
         .eq('content_type', 'image')
         .eq('is_starred', true)
+        .order('created_at', { ascending: true }) // Add consistent ordering
       
       if (data && data.length > 0) {
-        const randomImage = data[Math.floor(Math.random() * data.length)]
-        const imageUrl = randomImage.file_url || randomImage.content_data.imageUrl
+        const index = Math.floor(Date.now() / 10000) % data.length // Cycles every 10 seconds
+        const selectedImage = data[index]
+        const imageUrl = selectedImage.file_url || selectedImage.content_data.imageUrl
         setBgImage(imageUrl)
       }
       
@@ -38,7 +40,6 @@ export default function HomePage() {
     
     fetchBackground()
   }, [])
-
   useEffect(() => {
     async function fetchTags() {
       const { data } = await supabase

@@ -67,7 +67,7 @@ function ContentRenderer({ item, onClick }: { item: ContentItem; onClick?: () =>
             href={item.content_data.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            className="inline-block px-4 py-2 transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             {item.title} →
@@ -307,11 +307,11 @@ function EditModal({ item, allTags, onClose, onSave }: {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-auto"
+        className="rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
@@ -466,8 +466,6 @@ function EditModal({ item, allTags, onClose, onSave }: {
                   onClick={() => toggleTag(tag.id)}
                   className={`p-2 rounded border-2 text-sm transition-colors ${
                     selectedTags.has(tag.id)
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
                   }`}
                 >
                   {tag.name}
@@ -479,13 +477,13 @@ function EditModal({ item, allTags, onClose, onSave }: {
           <div className="flex gap-2 pt-4">
             <button
               onClick={handleSave}
-              className="flex-1 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 font-semibold transition-colors"
+              className="flex-1 py-2 transition-colors"
             >
               Save Changes
             </button>
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+              className="px-6 py-2 transition-colors"
             >
               Cancel
             </button>
@@ -739,7 +737,7 @@ function ResultsContent() {
             <span className="text-sm">Page {currentPage}</span>
             <Link 
               href="/" 
-              className="w-8 h-8 rounded-full hover:bg-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
+              className="w-8 h-8 rounded-full hover:flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
               aria-label="Back to selection"
             >
               ✕
@@ -832,7 +830,7 @@ function ResultsContent() {
                     setHasMore(nextBatch.length < pageEnd - pageStart)
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }}
-                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold"
+                  className="px-6 py-3 font-semibold"
                 >
                   Next Page ({currentPage + 1})
                 </button>
