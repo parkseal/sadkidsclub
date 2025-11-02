@@ -57,6 +57,19 @@ button.text-button.animate-pulse {
 }
 
 /* RESULTS PAGE */
-.p-6 {
-  background: var(--)
+.results-main {
+  background: var(--background);
 }
+
+.results-card {
+  background: var(--gray);
+  color: var(--foreground);
+  overflow: hidden;
+  grid-row: span var(--row-span);
+  overflow: hidden;
+}
+
+.results-card.quote { --row-span: 3; }
+.results-card.image { --row-span: 4; }
+.results-card.video { --row-span: 5; }
+.results-card.link { --row-span: 2; }

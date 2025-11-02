@@ -145,7 +145,7 @@ function FullscreenModal({ item, onClose }: { item: ContentItem; onClose: () => 
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 fullscreen-modal z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <button
@@ -307,11 +307,11 @@ function EditModal({ item, allTags, onClose, onSave }: {
 
   return (
     <div 
-      className="fixed inset-0 p-4"
+      className="fixed inset-0 edit-modal-overlay z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div 
-        className="rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-auto"
+        className="edit-modal-content rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
@@ -466,6 +466,8 @@ function EditModal({ item, allTags, onClose, onSave }: {
                   onClick={() => toggleTag(tag.id)}
                   className={`p-2 rounded border-2 text-sm transition-colors ${
                     selectedTags.has(tag.id)
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
                   }`}
                 >
                   {tag.name}
@@ -723,7 +725,7 @@ function ResultsContent() {
   }
 
   return (
-    <main className="min-h-screen p-8" style={{ background: 'var(--background)' }}>
+    <main className="min-h-screen p-8 results-main">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div className="flex gap-2">
@@ -749,16 +751,37 @@ function ResultsContent() {
           <p className="text-gray-600">Nothing found. Try different tags.</p>
         ) : (
           <>
-            <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-              {displayedContent.map((item) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 auto-rows-[100px] gap-4">
+              {displayedContent.map((item, index) => {
                 const isExpanded = expandedCards.has(item.id)
+                const isFeatured = (index + 1) % 20 === 0
+                
+                let rowSpan = 2 // default
+                let colSpan = 1
+                
+                if (item.is_starred) {
+                  switch (item.content_type) {
+                    case 'quote': rowSpan = 3; break
+                    case 'image': rowSpan = 4; break
+                    case 'video': rowSpan = 5; break
+                    case 'link': rowSpan = 2; break
+                  }
+                }
+                
+                if (isFeatured) {
+                  colSpan = 2
+                  rowSpan = Math.max(rowSpan, 4)
+                }
                 
                 return (
-                  <div key={item.id} className="p-6 rounded-lg shadow break-inside-avoid relative" style={{ background: 'var(--gray)', color: 'var(--foreground)' }}>
-                    <ContentRenderer 
-                      item={item} 
-                      onClick={() => setFullscreenItem(item)}
-                    />
+                  <div 
+                    key={item.id} 
+                    className="p-6 rounded-lg shadow relative results-card overflow-hidden"
+                    style={{ 
+                      gridRow: `span ${rowSpan}`,
+                      gridColumn: `span ${colSpan}`
+                    }}
+                  >
                     
                     <button
                       onClick={() => toggleExpand(item.id)}

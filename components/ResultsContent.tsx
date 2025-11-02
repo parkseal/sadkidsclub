@@ -28,14 +28,6 @@ interface Tag {
 function ContentRenderer({ item, onClick }: { item: ContentItem; onClick?: () => void }) {
   const content = (() => {
     switch (item.content_type) {
-      case 'text':
-        return (
-          <div 
-            className="prose max-w-none"
-            dangerouslySetInnerHTML={{ __html: item.content_data.text }}
-          />
-        )
-      
       case 'quote':
         return (
           <div className="border-l-4 border-gray-300 pl-4 italic">
@@ -178,7 +170,6 @@ function EditModal({ item, allTags, onClose, onSave }: {
   const [isStarred, setIsStarred] = useState(item.is_starred || false)
   
   // Content-type specific fields
-  const [contentText, setContentText] = useState(item.content_data.text || '')
   const [quote, setQuote] = useState(item.content_data.quote || '')
   const [quoteSource, setQuoteSource] = useState(item.content_data.source || '')
   const [quoteSourceUrl, setQuoteSourceUrl] = useState(item.content_data.sourceUrl || '')
@@ -207,9 +198,6 @@ function EditModal({ item, allTags, onClose, onSave }: {
     let contentData: any = {}
     
     switch (item.content_type) {
-      case 'text':
-        contentData = { text: contentText }
-        break
       case 'quote':
         contentData = { 
           quote, 
@@ -344,18 +332,6 @@ function EditModal({ item, allTags, onClose, onSave }: {
               className="w-full px-4 py-2 border rounded text-gray-800"
             />
           </div>
-
-          {item.content_type === 'text' && (
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Content</label>
-              <textarea
-                value={contentText}
-                onChange={(e) => setContentText(e.target.value)}
-                rows={6}
-                className="w-full px-4 py-2 border rounded text-gray-800"
-              />
-            </div>
-          )}
 
           {item.content_type === 'quote' && (
             <>

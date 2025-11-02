@@ -18,9 +18,8 @@ export default function AdminPage() {
   const [editTagName, setEditTagName] = useState('')
   
   const [contentTitle, setContentTitle] = useState('')
-  const [contentType, setContentType] = useState<'text' | 'quote' | 'link' | 'image' | 'video'>('text')
+  const [contentType, setContentType] = useState<'quote' | 'link' | 'image' | 'video'>('quote')
   
-  const [contentText, setContentText] = useState('')
   const [quote, setQuote] = useState('')
   const [quoteSource, setQuoteSource] = useState('')
   const [quoteSourceUrl, setQuoteSourceUrl] = useState('')
@@ -112,14 +111,6 @@ export default function AdminPage() {
     let contentData: any = {}
     
     switch (contentType) {
-      case 'text':
-        if (!contentText.trim()) {
-          alert('Text content required')
-          return
-        }
-        contentData = { text: contentText }
-        break
-      
       case 'quote':
         if (!quote.trim() || !quoteSource.trim()) {
           alert('Quote and source required')
@@ -214,7 +205,6 @@ export default function AdminPage() {
 
   function resetForm() {
     setContentTitle('')
-    setContentText('')
     setQuote('')
     setQuoteSource('')
     setQuoteSourceUrl('')
@@ -238,7 +228,6 @@ export default function AdminPage() {
   }
 
   const contentTypes = [
-    { value: 'text', label: 'Text' },
     { value: 'quote', label: 'Quote' },
     { value: 'link', label: 'Link' },
     { value: 'image', label: 'Image' },
@@ -289,21 +278,6 @@ export default function AdminPage() {
               placeholder="Title"
               className="w-full px-4 py-2 border rounded"
             />
-
-            {contentType === 'text' && (
-              <>
-                <textarea
-                  value={contentText}
-                  onChange={(e) => setContentText(e.target.value)}
-                  placeholder="Content text (HTML supported)..."
-                  rows={6}
-                  className="w-full px-4 py-2 border rounded"
-                />
-                <p className="text-sm text-gray-600">
-                  Supports HTML formatting like &lt;strong&gt;, &lt;em&gt;, &lt;a href=""&gt;, &lt;br&gt;, etc.
-                </p>
-              </>
-            )}
 
             {contentType === 'quote' && (
               <>
