@@ -6,6 +6,8 @@ import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import Masonry from 'react-masonry-css'
+
 
 interface ContentItem {
   id: string
@@ -517,6 +519,11 @@ function ResultsContent() {
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const breakpointColumns = {
+    default: 3,
+    1024: 2,
+    768: 1
+  }
 
   const ITEMS_PER_LOAD = 10
   const ITEMS_PER_PAGE = 30
@@ -750,18 +757,24 @@ function ResultsContent() {
         {allContent.length === 0 ? (
           <p className="text-gray-600">Nothing found. Try different tags.</p>
         ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style={{ gridAutoRows: 'max-content' }}>
+            <Masonry
+              breakpointCols={breakpointColumns}
+              className="flex -ml-6 w-auto"
+              columnClassName="pl-6 bg-clip-padding"
+            >
               {displayedContent.map((item, index) => {
                 const isExpanded = expandedCards.has(item.id)
                 const isFeatured = (index + 1) % 20 === 0
                 
-                const colSpan = isFeatured ? 'md:col-span-2' : item.is_starred ? 'lg:col-span-1' : ''
+                // Determine width class
+                let widthClass = 'w-full'
+                if (isFeatured) widthClass = 'w-[180%]'
+                else if (item.is_starred) widthClass = 'w-[140%]'
                 
                 return (
                   <div 
                     key={item.id} 
-                    className={`p-6 rounded-lg shadow relative results-card ${colSpan}`}
+                    className={`p-6 rounded-lg shadow relative results-card mb-6 ${widthClass}`}
                   >
                     <ContentRenderer 
                       item={item} 
@@ -772,7 +785,7 @@ function ResultsContent() {
                       onClick={() => toggleExpand(item.id)}
                       className="absolute bottom-4 right-4 text-sm"
                     >
-                      {isExpanded ? '▲' : '▼'}
+                      {isExpanded ? '-' : '+'}
                     </button>
                     
                     {isExpanded && (
