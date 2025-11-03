@@ -782,6 +782,10 @@ function ResultsContent() {
                       gridColumn: `span ${colSpan}`
                     }}
                   >
+                    <ContentRenderer 
+                      item={item} 
+                      onClick={() => setFullscreenItem(item)}
+                    />
                     
                     <button
                       onClick={() => toggleExpand(item.id)}
