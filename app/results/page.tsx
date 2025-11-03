@@ -751,19 +751,17 @@ function ResultsContent() {
           <p className="text-gray-600">Nothing found. Try different tags.</p>
         ) : (
           <>
-            <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style={{ gridAutoRows: 'max-content' }}>
               {displayedContent.map((item, index) => {
                 const isExpanded = expandedCards.has(item.id)
                 const isFeatured = (index + 1) % 20 === 0
                 
+                const colSpan = isFeatured ? 'md:col-span-2' : item.is_starred ? 'lg:col-span-1' : ''
+                
                 return (
                   <div 
                     key={item.id} 
-                    className="p-6 rounded-lg shadow relative results-card break-inside-avoid"
-                    style={{
-                      width: item.is_starred ? '140%' : isFeatured ? '180%' : '100%',
-                      maxWidth: item.is_starred || isFeatured ? 'none' : undefined
-                    }}
+                    className={`p-6 rounded-lg shadow relative results-card ${colSpan}`}
                   >
                     <ContentRenderer 
                       item={item} 
