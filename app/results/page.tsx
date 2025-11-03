@@ -756,19 +756,13 @@ function ResultsContent() {
                 const isExpanded = expandedCards.has(item.id)
                 const isFeatured = (index + 1) % 20 === 0
                 
-                // Scale factor for starred/featured items
-                let scale = 1
-                if (item.is_starred) scale = 1.3
-                if (isFeatured) scale = 1.5
-                
                 return (
                   <div 
                     key={item.id} 
-                    className="p-6 rounded-lg shadow relative results-card break-inside-avoid mb-6"
-                    style={{ 
-                      transform: `scale(${scale})`,
-                      transformOrigin: 'top center',
-                      marginBottom: scale > 1 ? `${(scale - 1) * 200}px` : undefined
+                    className="p-6 rounded-lg shadow relative results-card break-inside-avoid"
+                    style={{
+                      width: item.is_starred ? '140%' : isFeatured ? '180%' : '100%',
+                      maxWidth: item.is_starred || isFeatured ? 'none' : undefined
                     }}
                   >
                     <ContentRenderer 
