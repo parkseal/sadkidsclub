@@ -755,8 +755,9 @@ function ResultsContent() {
         </div>
 
         {allContent.length === 0 ? (
-          <p className="text-gray-600">Nothing found. Try different tags.</p>
+          <p>Nothing found. Try different tags.</p>
         ) : (
+          <>
             <Masonry
               breakpointCols={breakpointColumns}
               className="flex -ml-6 w-auto"
@@ -789,7 +790,7 @@ function ResultsContent() {
                     </button>
                     
                     {isExpanded && (
-                      <div className="mt-6 pt-4 border-t border-gray-200">
+                      <div className="mt-6 pt-4 border-t">
                         <div className="mb-3">
                           <p className="text-xs font-semibold mb-2">Tags:</p>
                           <div className="flex flex-wrap gap-2">
@@ -811,7 +812,7 @@ function ResultsContent() {
                               e.stopPropagation()
                               setEditingItem(item)
                             }}
-                            className="text-xs text-blue-400 hover:text-blue-600 transition-colors"
+                            className="text-xs transition-colors"
                           >
                             Edit
                           </button>
@@ -820,7 +821,7 @@ function ResultsContent() {
                               e.stopPropagation()
                               deleteContent(item.id)
                             }}
-                            className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                            className="text-xs transition-colors"
                           >
                             Delete
                           </button>
@@ -830,8 +831,8 @@ function ResultsContent() {
                   </div>
                 )
               })}
-            </div>
-            
+            </Masonry>
+
             {hasMore && (
               <div ref={loadMoreRef} className="h-20 flex items-center justify-center mt-8">
                 <div>loading...</div>
