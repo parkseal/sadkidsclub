@@ -751,35 +751,24 @@ function ResultsContent() {
           <p className="text-gray-600">Nothing found. Try different tags.</p>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 auto-rows-[100px] gap-4">
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
               {displayedContent.map((item, index) => {
                 const isExpanded = expandedCards.has(item.id)
                 const isFeatured = (index + 1) % 20 === 0
                 
-                let rowSpan = 2 // default
-                let colSpan = 1
-                
-                if (item.is_starred) {
-                  switch (item.content_type) {
-                    case 'quote': rowSpan = 3; break
-                    case 'image': rowSpan = 4; break
-                    case 'video': rowSpan = 5; break
-                    case 'link': rowSpan = 2; break
-                  }
-                }
-                
-                if (isFeatured) {
-                  colSpan = 2
-                  rowSpan = Math.max(rowSpan, 4)
-                }
+                // Scale factor for starred/featured items
+                let scale = 1
+                if (item.is_starred) scale = 1.3
+                if (isFeatured) scale = 1.5
                 
                 return (
                   <div 
                     key={item.id} 
-                    className="p-6 rounded-lg shadow relative results-card overflow-hidden"
+                    className="p-6 rounded-lg shadow relative results-card break-inside-avoid mb-6"
                     style={{ 
-                      gridRow: `span ${rowSpan}`,
-                      gridColumn: `span ${colSpan}`
+                      transform: `scale(${scale})`,
+                      transformOrigin: 'top center',
+                      marginBottom: scale > 1 ? `${(scale - 1) * 200}px` : undefined
                     }}
                   >
                     <ContentRenderer 
