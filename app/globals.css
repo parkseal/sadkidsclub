@@ -95,54 +95,27 @@ button.text-button.animate-pulse {
 .col-span-2 { grid-column: span 2; }
 .col-span-3 { grid-column: span 3; }
 
-/* Starred text always spans all columns */
-.masonry-item[data-starred="true"][data-type="text"] {
-  grid-column: 1 / -1 !important;
-}
+/* Remove all the .masonry-grid grid styles and replace with: */
 
-/* Starred images: detect portrait vs landscape */
-.masonry-item[data-starred="true"][data-type="image"] {
-  grid-column: span 2;
-}
-
-/* If image is wider than tall (landscape), span 3 columns */
-.masonry-item[data-starred="true"][data-type="image"]:has(img) {
-  container-type: inline-size;
-}
-
-.masonry-item[data-starred="true"][data-type="image"] img {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-}
-
-/* Use onload to detect aspect ratio via data attribute if needed */
-.masonry-item[data-starred="true"][data-type="image"][data-landscape="true"] {
-  grid-column: span 3;
+.masonry-container {
+  margin: 0 auto;
 }
 
 .masonry-item {
+  width: 300px;
+  margin-bottom: 24px;
   position: relative;
+}
+
+/* Starred items span 2 columns (600px + gap) */
+.masonry-item[data-starred="true"] {
+  width: 624px;
 }
 
 .results-card {
   background: var(--gray);
   color: var(--foreground);
-  display: flex;
-  flex-direction: column;
   padding: 1.5rem;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  height: fit-content;
-}
-
-.results-card img {
-  width: 100%;
-  height: auto;
-  border-radius: 0.5rem;
-}
-
-.results-card .aspect-video {
-  width: 100%;
-  height: auto;
 }
