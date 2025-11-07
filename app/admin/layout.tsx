@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isAuthed, setIsAuthed] = useState(false)
   const [password, setPassword] = useState('')

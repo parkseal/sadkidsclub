@@ -56,9 +56,73 @@ button.text-button.animate-pulse {
     padding: 5px 15px;
 }
 
-/* RESULTS PAGE */
+/* RESULTS PAGE - MASONRY GRID */
 .results-main {
   background: var(--background);
+}
+
+.masonry-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  grid-auto-flow: dense; /* Fill holes in the grid */
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1024px) {
+  .masonry-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .col-span-3 {
+    grid-column: span 2 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .masonry-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .col-span-2,
+  .col-span-3 {
+    grid-column: span 1 !important;
+  }
+}
+
+/* Column span classes */
+.col-span-1 { grid-column: span 1; }
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+
+/* Starred text always spans all columns */
+.masonry-item[data-starred="true"][data-type="text"] {
+  grid-column: 1 / -1 !important;
+}
+
+/* Starred images: detect portrait vs landscape */
+.masonry-item[data-starred="true"][data-type="image"] {
+  grid-column: span 2;
+}
+
+/* If image is wider than tall (landscape), span 3 columns */
+.masonry-item[data-starred="true"][data-type="image"]:has(img) {
+  container-type: inline-size;
+}
+
+.masonry-item[data-starred="true"][data-type="image"] img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* Use onload to detect aspect ratio via data attribute if needed */
+.masonry-item[data-starred="true"][data-type="image"][data-landscape="true"] {
+  grid-column: span 3;
+}
+
+.masonry-item {
+  position: relative;
 }
 
 .results-card {
@@ -66,20 +130,19 @@ button.text-button.animate-pulse {
   color: var(--foreground);
   display: flex;
   flex-direction: column;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  height: fit-content;
 }
 
 .results-card img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
   border-radius: 0.5rem;
 }
 
 .results-card .aspect-video {
-  height: 100%;
+  width: 100%;
+  height: auto;
 }
-
-.results-card.quote { --row-span: 3; }
-.results-card.image { --row-span: 4; }
-.results-card.video { --row-span: 5; }
-.results-card.link { --row-span: 2; }

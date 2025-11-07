@@ -6,7 +6,6 @@ import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import Masonry from 'react-masonry-css'
 
 
 interface ContentItem {
@@ -519,16 +518,12 @@ function ResultsContent() {
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
-  const breakpointColumns = {
-    default: 3,
-    1024: 2,
-    768: 1
-  }
+  const masonryRef = useRef<HTMLDivElement>(null)
 
   const ITEMS_PER_LOAD = 10
   const ITEMS_PER_PAGE = 30
   const [currentPage, setCurrentPage] = useState(1)
-
+  
   const toggleExpand = (id: string) => {
     const newSet = new Set(expandedCards)
     if (newSet.has(id)) {
@@ -705,6 +700,18 @@ function ResultsContent() {
   }, [allContent, displayedContent, hasMore, loading, currentPage])
 
   useEffect(() => {
+  if (masonryRef.current && displayedContent.length > 0) {
+    // @ts-ignore
+    new Masonry(masonryRef.current, {
+      itemSelector: '.masonry-item',
+      columnWidth: '.masonry-item',
+      percentPosition: true,
+      gutter: 24
+    })
+  }
+}, [displayedContent])
+
+  useEffect(() => {
     if (loading || !hasMore) return
 
     observerRef.current = new IntersectionObserver(
@@ -758,24 +765,27 @@ function ResultsContent() {
           <p>Nothing found. Try different tags.</p>
         ) : (
           <>
-            <Masonry
-              breakpointCols={breakpointColumns}
-              className="flex -ml-6 w-auto"
-              columnClassName="pl-6 bg-clip-padding"
-            >
+            <div ref={masonryRef} className="masonry-grid">
               {displayedContent.map((item, index) => {
                 const isExpanded = expandedCards.has(item.id)
-                const isFeatured = (index + 1) % 20 === 0
+                const isEveryFifth = (index + 1) % 5 === 0
                 
-                // Determine width class
-                let widthClass = 'w-full'
-                if (isFeatured) widthClass = 'w-[180%]'
-                else if (item.is_starred) widthClass = 'w-[140%]'
+                // Determine column span
+                let colSpan = 1
+                if (item.content_type === 'text' && item.is_starred) {
+                  colSpan = 3 // Span all columns
+                } else if (item.is_starred) {
+                  colSpan = 2 // Default to 2 for starred, CSS handles landscape detection
+                } else if (isEveryFifth) {
+                  colSpan = 2
+                }
                 
                 return (
                   <div 
                     key={item.id} 
-                    className={`p-6 rounded-lg shadow relative results-card mb-6 ${widthClass}`}
+                    className={`masonry-item results-card col-span-${colSpan}`}
+                    data-starred={item.is_starred}
+                    data-type={item.content_type}
                   >
                     <ContentRenderer 
                       item={item} 
@@ -831,7 +841,7 @@ function ResultsContent() {
                   </div>
                 )
               })}
-            </Masonry>
+            </div>
 
             {hasMore && (
               <div ref={loadMoreRef} className="h-20 flex items-center justify-center mt-8">
