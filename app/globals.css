@@ -67,15 +67,9 @@ button.text-button.animate-pulse {
 }
 
 .masonry-item {
-  width: 300px;
   margin-bottom: 24px;
   position: relative;
   transition: transform 0.4s ease-out;
-}
-
-/* Starred items span 2 columns (600px + gap) */
-.masonry-item[data-starred="true"] {
-  width: 624px;
 }
 
 .results-card {
@@ -84,4 +78,8 @@ button.text-button.animate-pulse {
   padding: 1.5rem;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.grid-item--width2 {
+  width: 66.6666%; 
 }

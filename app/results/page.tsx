@@ -527,7 +527,6 @@ function ResultsContent() {
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
-  const masonryRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const isotopeRef = useRef<any>(null)
 
@@ -819,13 +818,13 @@ useEffect(() => {
               <div className="grid-sizer w-1/3 max-w-[33.333333%] sm:w-1/2 sm:max-w-[50%] lg:w-1/3 lg:max-w-[33.333333%]"></div>
               {displayedContent.map((item, index) => {
                 const isExpanded = expandedCards.has(item.id)
-
+                const isStarredClass = item.is_starred ? 'grid-item--width2' : '';
                 const tagClasses = item.tags ? item.tags.map(t => `tag-${t.id}`).join(' ') : '';
 
                 return (
                   <div 
                     key={item.id} 
-                    className={`masonry-item results-card ${tagClasses}`}
+                    className={`masonry-item results-card ${tagClasses} ${isStarredClass}`}
                     data-starred={item.is_starred}
                     data-type={item.content_type}
                     data-match-count={item.matchCount || 0}
