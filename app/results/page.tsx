@@ -696,12 +696,11 @@ function ResultsContent() {
 
   // File: page.tsx (inside ResultsPage function)
 
-// 🛑 ADD THIS useEffect BLOCK
 useEffect(() => {
-  // Check if content is loaded, the container ref is set, and Isotope is available
   if (displayedContent.length > 0 && gridRef.current && window.Isotope) {
-    
-    // 1. INITIALIZATION: Only run Isotope constructor once
+  
+  useEffect(() => {
+    if (displayedContent.length > 0 && gridRef.current && window.Isotope) {
     if (!isotopeRef.current) {
       isotopeRef.current = new window.Isotope(gridRef.current, {
         itemSelector: '.masonry-item', // Class used on each content item
@@ -743,6 +742,7 @@ useEffect(() => {
     });
   }
 }, [displayedContent, selectedTags])
+}})
 
   const loadMore = useCallback(() => {
     if (!hasMore || loading) return
