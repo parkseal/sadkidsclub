@@ -4,10 +4,11 @@
   "version": "1.0",
   "description": "Save content to sadkidsclub database",
   "permissions": [
-    "contextMenus",
-    "activeTab",
-    "storage"
-  ],
+      "contextMenus",
+      "activeTab",
+      "storage",
+      "scripting"
+    ],
   "background": {
     "service_worker": "background.js"
   },

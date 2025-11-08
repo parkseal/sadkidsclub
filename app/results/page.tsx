@@ -40,7 +40,10 @@ function ContentRenderer({ item, onClick }: { item: ContentItem; onClick?: () =>
       case 'quote':
         return (
           <div className="border-l-4 border-gray-300 pl-4 italic">
-            <p className="text-lg mb-2">"{item.content_data.quote}"</p>
+            <p
+  className="text-lg mb-2"
+  dangerouslySetInnerHTML={{ __html: `"${item.content_data.quote}"` }}
+/>
             <div className="text-sm">
               — {item.content_data.source}
               {item.content_data.sourceUrl && (
@@ -497,6 +500,12 @@ function EditModal({ item, allTags, onClose, onSave }: {
   )
 }
 
+declare global {
+  interface Window {
+    Isotope: any; 
+  }
+}
+
 export default function ResultsPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
@@ -519,6 +528,8 @@ function ResultsContent() {
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const masonryRef = useRef<HTMLDivElement>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const isotopeRef = useRef<any>(null)
 
   const ITEMS_PER_LOAD = 10
   const ITEMS_PER_PAGE = 30
@@ -684,6 +695,56 @@ function ResultsContent() {
     fetchContent()
   }, [searchParams])
 
+  // File: page.tsx (inside ResultsPage function)
+
+// 🛑 ADD THIS useEffect BLOCK
+useEffect(() => {
+  // Check if content is loaded, the container ref is set, and Isotope is available
+  if (displayedContent.length > 0 && gridRef.current && window.Isotope) {
+    
+    // 1. INITIALIZATION: Only run Isotope constructor once
+    if (!isotopeRef.current) {
+      isotopeRef.current = new window.Isotope(gridRef.current, {
+        itemSelector: '.masonry-item', // Class used on each content item
+        layoutMode: 'masonry',
+        masonry: {
+          columnWidth: '.grid-sizer', // Uses the responsive sizer element
+          gutter: 24 // Spacing between items (Tailwind gap-6 is 1.5rem = 24px)
+        },
+        
+        // 2. SORTING CONFIGURATION: Set up custom sorting based on data attribute
+        getSortData: {
+          // 'matchCount' is the name of the sort key we'll use
+          // It reads the 'data-match-count' attribute and converts the value to an integer
+          matchCount: '[data-match-count] parseInt', 
+        },
+        sortBy: 'matchCount',     // Default sort key
+        sortAscending: false,     // Sort descending (higher count = better match = first)
+        transitionDuration: '0.4s', // Animation speed
+      });
+    }
+
+    // 3. ARRANGEMENT/RE-LAYOUT: Re-run every time content/tags change
+    // a. Tell Isotope about the current items in the DOM
+    isotopeRef.current.reloadItems(); 
+    
+    // b. Construct the filter string (OR logic for partial matches)
+    const filterValue = selectedTags.map(id => `.tag-${id}`).join(', ') || '*';
+    
+    // c. Apply the filter and arrange (this also triggers the sort by matchCount)
+    isotopeRef.current.arrange({ filter: filterValue });
+    
+    // d. CRITICAL: Handle image loading for correct height calculation
+    const images = gridRef.current.querySelectorAll('img');
+    images.forEach(img => {
+      // If image is not yet loaded, wait for it before calling layout()
+      if (!img.complete) {
+        img.onload = () => isotopeRef.current.layout();
+      }
+    });
+  }
+}, [displayedContent, selectedTags])
+
   const loadMore = useCallback(() => {
     if (!hasMore || loading) return
     
@@ -698,21 +759,6 @@ function ResultsContent() {
       setHasMore(false)
     }
   }, [allContent, displayedContent, hasMore, loading, currentPage])
-
-  useEffect(() => {
-  if (masonryRef.current && displayedContent.length > 0) {
-    // @ts-ignore
-    const masonryInstance = new Masonry(masonryRef.current, {
-      itemSelector: '.masonry-item',
-      columnWidth: 300,
-      gutter: 24,
-      fitWidth: true,
-      transitionDuration: 0
-    })
-    
-    return () => masonryInstance.destroy()
-  }
-}, [displayedContent])
 
   useEffect(() => {
     if (loading || !hasMore) return
@@ -768,22 +814,26 @@ function ResultsContent() {
           <p>Nothing found. Try different tags.</p>
         ) : (
           <>
-            <div ref={masonryRef} className="masonry-container">
+            <div ref={gridRef} className="masonry-grid w-full mx-auto"> 
+              {/* The width classes (w-1/3, sm:w-1/2, etc.) control the responsive column count */}
+              <div className="grid-sizer w-1/3 max-w-[33.333333%] sm:w-1/2 sm:max-w-[50%] lg:w-1/3 lg:max-w-[33.333333%]"></div>
               {displayedContent.map((item, index) => {
                 const isExpanded = expandedCards.has(item.id)
-                
+
+                const tagClasses = item.tags ? item.tags.map(t => `tag-${t.id}`).join(' ') : '';
+
                 return (
                   <div 
                     key={item.id} 
-                    className="masonry-item results-card"
+                    className={`masonry-item results-card ${tagClasses}`}
                     data-starred={item.is_starred}
                     data-type={item.content_type}
+                    data-match-count={item.matchCount || 0}
                   >
                     <ContentRenderer 
                       item={item} 
                       onClick={() => setFullscreenItem(item)}
                     />
-                    {/* rest of card content */}
                   </div>
                 )
               })}

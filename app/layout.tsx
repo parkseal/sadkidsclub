@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Script 
-          src="https://unpkg.com/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"
+          src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.min.js"
           strategy="beforeInteractive"
         />
         {children}

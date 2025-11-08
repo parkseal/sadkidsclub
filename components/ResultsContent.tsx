@@ -31,7 +31,10 @@ function ContentRenderer({ item, onClick }: { item: ContentItem; onClick?: () =>
       case 'quote':
         return (
           <div className="border-l-4 border-gray-300 pl-4 italic">
-            <p className="text-lg mb-2">"{item.content_data.quote}"</p>
+            <p
+  className="text-lg mb-2"
+  dangerouslySetInnerHTML={{ __html: `"${item.content_data.quote}"` }}
+/>
             <div className="text-sm">
               — {item.content_data.source}
               {item.content_data.sourceUrl && (

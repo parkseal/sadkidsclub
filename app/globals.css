@@ -56,46 +56,11 @@ button.text-button.animate-pulse {
     padding: 5px 15px;
 }
 
-/* RESULTS PAGE - MASONRY GRID */
-.results-main {
-  background: var(--background);
-}
-
-.masonry-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  grid-auto-flow: dense; /* Fill holes in the grid */
-}
-
-/* Responsive breakpoints */
-@media (max-width: 1024px) {
-  .masonry-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .col-span-3 {
-    grid-column: span 2 !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .masonry-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .col-span-2,
-  .col-span-3 {
-    grid-column: span 1 !important;
-  }
-}
 
 /* Column span classes */
 .col-span-1 { grid-column: span 1; }
 .col-span-2 { grid-column: span 2; }
 .col-span-3 { grid-column: span 3; }
-
-/* Remove all the .masonry-grid grid styles and replace with: */
 
 .masonry-container {
   margin: 0 auto;
@@ -105,6 +70,7 @@ button.text-button.animate-pulse {
   width: 300px;
   margin-bottom: 24px;
   position: relative;
+  transition: transform 0.4s ease-out;
 }
 
 /* Starred items span 2 columns (600px + gap) */
