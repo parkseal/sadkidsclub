@@ -839,7 +839,6 @@ const loadMore = useCallback(() => {
         ) : (
           <>
             <div ref={gridRef} className="masonry-grid w-full mx-auto"> 
-              {/* The width classes (w-1/3, sm:w-1/2, etc.) control the responsive column count */}
               <div className="grid-sizer w-1/3 max-w-[33.333333%] sm:w-1/2 sm:max-w-[50%] lg:w-1/3 lg:max-w-[33.333333%]"></div>
               {displayedContent.map((item, index) => {
                 const isExpanded = expandedCards.has(item.id)
@@ -862,6 +861,7 @@ const loadMore = useCallback(() => {
                 )
               })}
             </div>
+
             {hasMore && (
               <div ref={loadMoreRef} className="h-20 flex items-center justify-center mt-8">
                 <div>loading...</div>
