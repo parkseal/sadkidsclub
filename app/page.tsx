@@ -105,14 +105,12 @@ export default function HomePage() {
             showTags ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="grid grid-cols-2 gap-4 mb-8 mt-8">
+          <div className="grid grid-cols-2 gap-4 mb-8">
             {tags.map((tag) => (
               <button
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
-                className={`p-4 transition-colors ${
-                  selected.has(tag.id) ? 'selected' : ''
-                }`} 
+                className={selected.has(tag.id) ? 'selected' : ''}
               >
                  {tag.name}
               </button>

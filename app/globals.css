@@ -29,7 +29,8 @@ body {
 .grid button.selected,
 .grid button:focus {
   background: var(--background);
-  color: var(--foreground)
+  color: var(--foreground);
+  border-color: var(--foreground);
 }
 
 .text-button {
