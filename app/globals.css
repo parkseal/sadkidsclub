@@ -25,12 +25,19 @@ body {
   transition-duration: 150ms;
 }
 
-.grid button:hover,
-.grid button.selected,
-.grid button:focus {
+.grid button.selected {
   background: var(--background);
   color: var(--foreground);
   border-color: var(--foreground);
+}
+
+.grid button:hover {
+  border-color: var(--foreground);
+}
+
+.grid button:focus {
+  outline: 2px dashed var(--foreground);
+  outline-offset: 2px;
 }
 
 .text-button {
@@ -81,6 +88,15 @@ button.text-button.animate-pulse {
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
 }
 
-.grid-item--width2 {
-  width: 66.6666%; 
+.masonry-grid { position: relative; }
+.grid-sizer,
+.masonry-item { width: 50%; }           /* 2 cols on small */
+@media (min-width: 640px) {
+  .grid-sizer, .masonry-item { width: 33.3333%; } /* 3 cols */
 }
+@media (min-width: 1024px) {
+  .grid-sizer, .masonry-item { width: 25%; }      /* 4 cols */
+}
+
+/* optional: 2x span for starred */
+.grid-item--width2 { width: 66.6666%; }

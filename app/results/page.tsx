@@ -503,6 +503,7 @@ function EditModal({ item, allTags, onClose, onSave }: {
 declare global {
   interface Window {
     Isotope: any; 
+    imagesLoaded: any;
   }
 }
 
@@ -694,64 +695,88 @@ function ResultsContent() {
     fetchContent()
   }, [searchParams])
 
+// Initialize Isotope once and wire up imagesLoaded
 useEffect(() => {
-  if (displayedContent.length > 0 && gridRef.current && window.Isotope) {
-    if (!isotopeRef.current) {
-      isotopeRef.current = new window.Isotope(gridRef.current, {
-        itemSelector: '.masonry-item', // Class used on each content item
-        layoutMode: 'masonry',
-        masonry: {
-          columnWidth: '.grid-sizer', // Uses the responsive sizer element
-          gutter: 24 // Spacing between items (Tailwind gap-6 is 1.5rem = 24px)
-        },
-        
-        // 2. SORTING CONFIGURATION: Set up custom sorting based on data attribute
-        getSortData: {
-          // 'matchCount' is the name of the sort key we'll use
-          // It reads the 'data-match-count' attribute and converts the value to an integer
-          matchCount: '[data-match-count] parseInt', 
-        },
-        sortBy: 'matchCount',     // Default sort key
-        sortAscending: false,     // Sort descending (higher count = better match = first)
-        transitionDuration: '0.4s', // Animation speed
-      });
-    }
+  const gridEl = gridRef.current;
+  if (!gridEl || !window.Isotope) return;
 
-    // 3. ARRANGEMENT/RE-LAYOUT: Re-run every time content/tags change
-    // a. Tell Isotope about the current items in the DOM
-    isotopeRef.current.reloadItems(); 
-    
-    // b. Construct the filter string (OR logic for partial matches)
-    const filterValue = selectedTags.map(tag => `.tag-${tag.id}`).join(', ') || '*';
-    
-    // c. Apply the filter and arrange (this also triggers the sort by matchCount)
-    isotopeRef.current.arrange({ filter: filterValue });
-    
-    // d. CRITICAL: Handle image loading for correct height calculation
-    const images = gridRef.current.querySelectorAll('img');
-    images.forEach(img => {
-      // If image is not yet loaded, wait for it before calling layout()
-      if (!img.complete) {
-        img.onload = () => isotopeRef.current.layout();
-      }
+  // init once
+  if (!isotopeRef.current) {
+    isotopeRef.current = new window.Isotope(gridEl, {
+      itemSelector: '.masonry-item',
+      layoutMode: 'masonry',
+      percentPosition: true,
+      masonry: {
+        columnWidth: '.grid-sizer',
+        gutter: 12,
+        fitWidth: true
+      },
+      getSortData: { matchCount: '[data-match-count] parseInt' },
+      sortBy: 'matchCount',
+      sortAscending: false,
+      transitionDuration: '0.25s'
     });
   }
-}, [displayedContent, selectedTags])
 
-  const loadMore = useCallback(() => {
-    if (!hasMore || loading) return
-    
-    const currentLength = displayedContent.length
-    const pageMax = currentPage * ITEMS_PER_PAGE
-    const nextBatch = allContent.slice(currentLength, Math.min(currentLength + ITEMS_PER_LOAD, pageMax))
-    
-    if (nextBatch.length > 0) {
-      setDisplayedContent(prev => [...prev, ...nextBatch])
-      setHasMore(currentLength + nextBatch.length < pageMax && currentLength + nextBatch.length < allContent.length)
-    } else {
-      setHasMore(false)
-    }
-  }, [allContent, displayedContent, hasMore, loading, currentPage])
+  // hook imagesLoaded
+  let imgLd: any = null;
+  if (window.imagesLoaded) {
+    imgLd = window.imagesLoaded(gridEl);
+    const relayout = () => isotopeRef.current?.layout();
+    imgLd.on('progress', relayout);
+    imgLd.on('always', relayout);
+  }
+
+  // cleanup on unmount
+  return () => {
+    imgLd?.off?.('progress');
+    imgLd?.off?.('always');
+    isotopeRef.current?.destroy();
+    isotopeRef.current = null;
+  };
+}, []); // ← mount/unmount only
+
+useEffect(() => {
+  if (!isotopeRef.current) return;
+
+  // Tell Isotope about current DOM children
+  isotopeRef.current.reloadItems();
+
+  // OR-filter by selected tags (or show all)
+  const filterValue =
+    selectedTags.length > 0
+      ? selectedTags.map(t => `.tag-${t.id}`).join(', ')
+      : '*';
+
+  isotopeRef.current.arrange({
+    filter: filterValue,
+    sortBy: 'matchCount',
+    sortAscending: false
+  });
+
+  // Safety relayout (helps after image loads already handled by imagesLoaded)
+  isotopeRef.current.layout();
+}, [displayedContent, selectedTags]);
+const loadMore = useCallback(() => {
+  if (!hasMore || loading) return;
+
+  const currentLength = displayedContent.length;
+  const pageMax = currentPage * ITEMS_PER_PAGE;
+
+  const nextBatch = allContent.slice(
+    currentLength,
+    Math.min(currentLength + ITEMS_PER_LOAD, pageMax)
+  );
+
+  if (nextBatch.length > 0) {
+    setDisplayedContent((prev) => [...prev, ...nextBatch]);
+
+    const newLength = currentLength + nextBatch.length;
+    setHasMore(newLength < pageMax && newLength < allContent.length);
+  } else {
+    setHasMore(false);
+  }
+}, [allContent, displayedContent, hasMore, loading, currentPage]);
 
   useEffect(() => {
     if (loading || !hasMore) return
