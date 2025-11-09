@@ -528,8 +528,8 @@ function ResultsContent() {
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
-  const gridRef = useRef<HTMLDivElement>(null)
-  const isotopeRef = useRef<any>(null)
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const isotopeRef = useRef<any>(null);
 
   const ITEMS_PER_LOAD = 10
   const ITEMS_PER_PAGE = 30
@@ -698,43 +698,49 @@ function ResultsContent() {
 // Initialize Isotope once and wire up imagesLoaded
 useEffect(() => {
   const gridEl = gridRef.current;
-  if (!gridEl || !window.Isotope) return;
+  if (!gridEl) return;
 
-  // init once
-  if (!isotopeRef.current) {
-    isotopeRef.current = new window.Isotope(gridEl, {
-      itemSelector: '.masonry-item',
-      layoutMode: 'masonry',
-      percentPosition: true,
-      masonry: {
-        columnWidth: '.grid-sizer',
-        gutter: 12,
-        fitWidth: true
-      },
-      getSortData: { matchCount: '[data-match-count] parseInt' },
-      sortBy: 'matchCount',
-      sortAscending: false,
-      transitionDuration: '0.25s'
-    });
-  }
 
-  // hook imagesLoaded
-  let imgLd: any = null;
-  if (window.imagesLoaded) {
-    imgLd = window.imagesLoaded(gridEl);
-    const relayout = () => isotopeRef.current?.layout();
-    imgLd.on('progress', relayout);
-    imgLd.on('always', relayout);
-  }
+let canceled = false;
+const tryInit = () => {
+if (canceled) return;
+// wait until CDN scripts are ready
+const Isotope = (window as any).Isotope;
+const imagesLoaded = (window as any).imagesLoaded;
+if (!Isotope || !imagesLoaded) {
+requestAnimationFrame(tryInit);
+return;
+}
 
-  // cleanup on unmount
-  return () => {
-    imgLd?.off?.('progress');
-    imgLd?.off?.('always');
-    isotopeRef.current?.destroy();
-    isotopeRef.current = null;
-  };
-}, []); // ← mount/unmount only
+
+// init once
+isotopeRef.current = new Isotope(gridEl, {
+itemSelector: ".masonry-item",
+layoutMode: "masonry",
+percentPosition: true,
+masonry: {
+columnWidth: ".grid-sizer",
+gutter: 12,
+fitWidth: true,
+},
+transitionDuration: "0.25s",
+});
+
+
+const imgLd = imagesLoaded(gridEl);
+const relayout = () => isotopeRef.current?.layout();
+imgLd.on("progress", relayout);
+imgLd.on("always", relayout);
+};
+
+
+tryInit();
+return () => {
+canceled = true;
+isotopeRef.current?.destroy?.();
+isotopeRef.current = null;
+};
+}, []);
 
 useEffect(() => {
   if (!isotopeRef.current) return;

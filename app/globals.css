@@ -23,21 +23,12 @@ body {
   transition-property: color, background-color, border-color;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+  cursor: grab;
 }
 
 .grid button.selected {
   background: var(--background);
   color: var(--foreground);
-  border-color: var(--foreground);
-}
-
-.grid button:hover {
-  border-color: var(--foreground);
-}
-
-.grid button:focus {
-  outline: 2px dashed var(--foreground);
-  outline-offset: 2px;
 }
 
 .text-button {
@@ -78,6 +69,7 @@ button.text-button.animate-pulse {
   margin-bottom: 24px;
   position: relative;
   transition: transform 0.4s ease-out;
+  display: block;
 }
 
 .results-card {
@@ -88,7 +80,7 @@ button.text-button.animate-pulse {
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
 }
 
-.masonry-grid { position: relative; }
+.masonry-grid { position: relative; margin: 0 auto;}
 .grid-sizer,
 .masonry-item { width: 50%; }           /* 2 cols on small */
 @media (min-width: 640px) {

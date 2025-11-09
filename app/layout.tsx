@@ -30,8 +30,9 @@ export default function RootLayout({
           src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"
           strategy="beforeInteractive"
         />
-
         {children}
+        <Script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js" strategy="afterInteractive" />
+        <Script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.min.js" strategy="afterInteractive" />
       </body>
     </html>
   );
