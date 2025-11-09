@@ -77,17 +77,18 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start p-8 pt-32 relative">
+    <div className="min-h-screen relative">
       {bgImage && (
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center opacity-50"
           style={{ backgroundImage: `url(${bgImage})` }}
         />
       )}
-      <div className="max-w-2xl w-full relative z-10 longlogo">
+      
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 longlogo">
         <img src="/images/logo-skc.png" alt="sadkidsclub" />
         
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mt-4">
           <button
             onClick={() => setShowTags(!showTags)}
             className="text-3xl hover:invert transition-transform"
@@ -96,18 +97,20 @@ export default function HomePage() {
             💭
           </button>
         </div>
-        
+      </div>
+      
+      <div className="absolute top-[60%] left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-8 z-10">
         <div 
           className={`overflow-hidden transition-all duration-700 ease-in-out ${
             showTags ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-2 gap-4 mb-8 mt-8">
             {tags.map((tag) => (
               <button
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
-                className={`p-4 rounded-lg border-2 transition-colors ${
+                className={`p-4 transition-colors ${
                   selected.has(tag.id) ? 'selected' : ''
                 }`} 
               >

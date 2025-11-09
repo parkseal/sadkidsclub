@@ -694,13 +694,8 @@ function ResultsContent() {
     fetchContent()
   }, [searchParams])
 
-  // File: page.tsx (inside ResultsPage function)
-
 useEffect(() => {
   if (displayedContent.length > 0 && gridRef.current && window.Isotope) {
-  
-  useEffect(() => {
-    if (displayedContent.length > 0 && gridRef.current && window.Isotope) {
     if (!isotopeRef.current) {
       isotopeRef.current = new window.Isotope(gridRef.current, {
         itemSelector: '.masonry-item', // Class used on each content item
@@ -727,7 +722,7 @@ useEffect(() => {
     isotopeRef.current.reloadItems(); 
     
     // b. Construct the filter string (OR logic for partial matches)
-    const filterValue = selectedTags.map(id => `.tag-${id}`).join(', ') || '*';
+    const filterValue = selectedTags.map(tag => `.tag-${tag.id}`).join(', ') || '*';
     
     // c. Apply the filter and arrange (this also triggers the sort by matchCount)
     isotopeRef.current.arrange({ filter: filterValue });
@@ -742,7 +737,6 @@ useEffect(() => {
     });
   }
 }, [displayedContent, selectedTags])
-}})
 
   const loadMore = useCallback(() => {
     if (!hasMore || loading) return

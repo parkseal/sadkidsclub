@@ -16,6 +16,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=swap');
+</head>
       <body>
         <Script 
           src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.min.js"
