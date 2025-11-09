@@ -717,9 +717,8 @@ return;
 isotopeRef.current = new Isotope(gridEl, {
 itemSelector: ".masonry-item",
 layoutMode: "masonry",
-percentPosition: true,
 masonry: {
-columnWidth: ".grid-sizer",
+columnWidth: 300,
 gutter: 12,
 fitWidth: true,
 },
@@ -839,7 +838,6 @@ const loadMore = useCallback(() => {
         ) : (
           <>
             <div ref={gridRef} className="masonry-grid w-full mx-auto"> 
-              <div className="grid-sizer w-1/3 max-w-[33.333333%] sm:w-1/2 sm:max-w-[50%] lg:w-1/3 lg:max-w-[33.333333%]"></div>
               {displayedContent.map((item, index) => {
                 const isExpanded = expandedCards.has(item.id)
                 const isStarredClass = item.is_starred ? 'grid-item--width2' : '';

@@ -56,7 +56,7 @@ button.text-button.animate-pulse {
 }
 
 
-/* Column span classes */
+/* Column span classes (no longer used by Isotope) */
 .col-span-1 { grid-column: span 1; }
 .col-span-2 { grid-column: span 2; }
 .col-span-3 { grid-column: span 3; }
@@ -66,10 +66,11 @@ button.text-button.animate-pulse {
 }
 
 .masonry-item {
-  margin-bottom: 24px;
+  margin-bottom: 12px; /* Recommended: match your gutter */
   position: relative;
   transition: transform 0.4s ease-out;
   display: block;
+  width: 300px; /* This MUST match your columnWidth */
 }
 
 .results-card {
@@ -80,15 +81,13 @@ button.text-button.animate-pulse {
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
 }
 
-.masonry-grid { position: relative; margin: 0 auto;}
-.grid-sizer,
-.masonry-item { width: 50%; }           /* 2 cols on small */
-@media (min-width: 640px) {
-  .grid-sizer, .masonry-item { width: 33.3333%; } /* 3 cols */
-}
-@media (min-width: 1024px) {
-  .grid-sizer, .masonry-item { width: 25%; }      /* 4 cols */
+.masonry-grid { 
+  position: relative; 
+  margin: 0 auto; /* This works with fitWidth: true */
 }
 
 /* optional: 2x span for starred */
-.grid-item--width2 { width: 66.6666%; }
+.grid-item--width2 { 
+  /* (2 * columnWidth) + gutter = (2 * 300px) + 12px */
+  width: 612px; 
+}
